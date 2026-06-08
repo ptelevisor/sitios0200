@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Horario Notif">
-    <!-- Comentado: <link rel="manifest" href="manifest.json"> -->
-    <!-- Comentado: <link rel="apple-touch-icon" href="icon-192.png"> -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='240' fill='%23111418' stroke='%23ef4444' stroke-width='16'/%3E%3Ccircle cx='256' cy='256' r='200' fill='%23ef4444'/%3E%3Crect x='246' y='120' width='20' height='136' rx='10' fill='%23111418'/%3E%3Crect x='246' y='280' width='20' height='40' rx='10' fill='%23111418'/%3E%3Ccircle cx='256' cy='340' r='16' fill='%23111418'/%3E%3Cpath d='M180 180 L220 220' stroke='%23111418' stroke-width='16' stroke-linecap='round'/%3E%3Cpath d='M332 180 L292 220' stroke='%23111418' stroke-width='16' stroke-linecap='round'/%3E%3C/svg%3E">
     <title>Horario de Notificaciones</title>
     <style>
         * {
@@ -1164,8 +1164,6 @@
             }
         });
 
-        // Service Worker comentado para evitar error 404
-        /*
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -1173,7 +1171,6 @@
                     .catch(err => console.log('❌ Error Service Worker:', err));
             });
         }
-        */
     </script>
 </body>
 
