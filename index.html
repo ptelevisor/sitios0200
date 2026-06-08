@@ -3,14 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="theme-color" content="#111418">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Horario Notif">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Comentado: <link rel="manifest" href="manifest.json"> -->
+    <!-- Comentado: <link rel="apple-touch-icon" href="icon-192.png"> -->
     <title>Horario de Notificaciones</title>
     <style>
         * {
@@ -374,61 +373,20 @@
             color: white;
         }
 
-        .period-block.intensity-1 {
-            background: #fee2e2;
-        }
-
-        .period-block.intensity-1 .period-count {
-            color: #1f2937;
-        }
-
-        .period-block.intensity-2 {
-            background: #fecaca;
-        }
-
-        .period-block.intensity-2 .period-count {
-            color: #1f2937;
-        }
-
-        .period-block.intensity-3 {
-            background: #fca5a5;
-        }
-
-        .period-block.intensity-3 .period-count {
-            color: #1f2937;
-        }
-
-        .period-block.intensity-4 {
-            background: #f87171;
-        }
-
-        .period-block.intensity-4 .period-count {
-            color: white;
-        }
-
-        .period-block.intensity-5 {
-            background: #ef4444;
-        }
-
-        .period-block.intensity-6 {
-            background: #dc2626;
-        }
-
-        .period-block.intensity-7 {
-            background: #b91c1c;
-        }
-
-        .period-block.intensity-8 {
-            background: #991b1b;
-        }
-
-        .period-block.intensity-9 {
-            background: #7f1d1d;
-        }
-
-        .period-block.intensity-10 {
-            background: #450a0a;
-        }
+        .period-block.intensity-1 { background: #fee2e2; }
+        .period-block.intensity-1 .period-count { color: #1f2937; }
+        .period-block.intensity-2 { background: #fecaca; }
+        .period-block.intensity-2 .period-count { color: #1f2937; }
+        .period-block.intensity-3 { background: #fca5a5; }
+        .period-block.intensity-3 .period-count { color: #1f2937; }
+        .period-block.intensity-4 { background: #f87171; }
+        .period-block.intensity-4 .period-count { color: white; }
+        .period-block.intensity-5 { background: #ef4444; }
+        .period-block.intensity-6 { background: #dc2626; }
+        .period-block.intensity-7 { background: #b91c1c; }
+        .period-block.intensity-8 { background: #991b1b; }
+        .period-block.intensity-9 { background: #7f1d1d; }
+        .period-block.intensity-10 { background: #450a0a; }
 
         .current-time-line {
             position: absolute;
@@ -500,11 +458,9 @@
             .orientation-warning {
                 display: none !important;
             }
-
             .main-content {
                 display: flex;
             }
-
             .main-content.visible {
                 display: flex;
             }
@@ -514,40 +470,31 @@
             .days-grid {
                 min-height: 300px;
             }
-
             .period-label {
                 font-size: 0.45rem;
                 top: -14px;
             }
-
             .period-count {
                 font-size: 0.65rem;
             }
-
             .day-header-cell {
                 padding: 5px 2px;
                 font-size: 0.7rem;
             }
-
             .timeline-container {
                 margin-left: 55px;
             }
-
             .time-scale {
                 left: -55px;
                 width: 45px;
             }
-
             .time-marker {
                 font-size: 0.55rem;
             }
-
             .alarm-panel {
                 padding: 0.5rem 0.8rem;
             }
-
-            .alarm-toggle label,
-            .alarm-minutes label {
+            .alarm-toggle label, .alarm-minutes label {
                 font-size: 0.7rem;
             }
         }
@@ -651,10 +598,10 @@
         function generarPeriodos(horasUnicas) {
             if (horasUnicas.length === 0) return [];
             horasUnicas.sort((a, b) => a - b);
-
+            
             let grupos = [];
             let grupoActual = [horasUnicas[0]];
-
+            
             for (let i = 1; i < horasUnicas.length; i++) {
                 if (horasUnicas[i] - horasUnicas[i - 1] <= 2.0) {
                     grupoActual.push(horasUnicas[i]);
@@ -664,12 +611,12 @@
                 }
             }
             grupos.push([...grupoActual]);
-
+            
             let gruposDivididos = [];
             for (let grupo of grupos) {
                 if (grupo.length === 0) continue;
                 const duracion = Math.max(...grupo) - Math.min(...grupo);
-
+                
                 if (duracion > 4.0 && grupo.length > 1) {
                     let subgrupo = [grupo[0]];
                     for (let i = 1; i < grupo.length; i++) {
@@ -686,7 +633,7 @@
                     gruposDivididos.push([...grupo]);
                 }
             }
-
+            
             return gruposDivididos.map(g => ({
                 min: Math.min(...g),
                 max: Math.max(...g),
@@ -712,20 +659,20 @@
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 }
-
+                
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
+                
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
+                
                 oscillator.frequency.value = 880;
                 gainNode.gain.value = 0.3;
-
+                
                 oscillator.start();
                 gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
                 oscillator.stop(audioContext.currentTime + 0.5);
-
+                
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
@@ -745,7 +692,7 @@
                     console.log("No se pudo reproducir beep:", err);
                 }
             }
-
+            
             if (navigator.vibrate) {
                 navigator.vibrate([200, 100, 200]);
             }
@@ -753,28 +700,28 @@
 
         function verificarAlarmas() {
             if (!alarmEnabled || !datosProcesados.dias) return;
-
+            
             const ahora = new Date();
             const diaActual = getCurrentDay();
             const horaActualDecimal = getCurrentHourDecimal();
             const minAntes = alarmMinutesBefore;
-
+            
             const dataDia = datosProcesados.dias[diaActual];
             if (!dataDia || !dataDia.periodos) return;
-
+            
             for (let periodo of dataDia.periodos) {
                 const horaInicio = periodo.min;
                 const tiempoAlarma = horaInicio - (minAntes / 60);
-
+                
                 const alarmKey = `${diaActual}_${periodo.label}_${minAntes}`;
-
+                
                 if (alarmasDisparadas.has(alarmKey)) continue;
-
+                
                 if (horaActualDecimal >= tiempoAlarma && horaActualDecimal < horaInicio) {
                     console.log(`🎵 Sonando alarma para ${periodo.label} (${minAntes} min antes) - ${new Date().toLocaleTimeString()}`);
                     reproducirBeep();
                     alarmasDisparadas.add(alarmKey);
-
+                    
                     if (Notification.permission === 'granted') {
                         new Notification(`⏰ Alerta: ${periodo.label}`, {
                             body: `Comienza en ${minAntes} minutos`,
@@ -782,10 +729,10 @@
                             vibrate: [200, 100, 200]
                         });
                     }
-
+                    
                     resaltarPeriodoEnVivo(diaActual, periodo.label);
                 }
-
+                
                 if (horaActualDecimal > horaInicio) {
                     if (alarmasDisparadas.has(alarmKey)) {
                         alarmasDisparadas.delete(alarmKey);
@@ -793,7 +740,7 @@
                 }
             }
         }
-
+        
         function resaltarPeriodoEnVivo(dia, periodoLabel) {
             const columnas = document.querySelectorAll('.day-column');
             const diasConDatos = [];
@@ -802,13 +749,13 @@
                     diasConDatos.push(d);
                 }
             }
-
+            
             const diaIndex = diasConDatos.findIndex(d => d === dia);
             if (diaIndex === -1) return;
-
+            
             const columna = columnas[diaIndex];
             if (!columna) return;
-
+            
             const bloques = columna.querySelectorAll('.period-block');
             for (let bloque of bloques) {
                 const labelSpan = bloque.querySelector('.period-label');
@@ -830,11 +777,11 @@
 
         function iniciarSistemaAlarmas() {
             if (alarmInterval) clearInterval(alarmInterval);
-
+            
             alarmInterval = setInterval(() => {
                 verificarAlarmas();
             }, 30000);
-
+            
             verificarAlarmas();
         }
 
@@ -850,7 +797,7 @@
             for (let dia of daysOrder) {
                 registrosPorDia[dia] = [];
             }
-
+            
             const sheetName = data.SheetNames[0];
             const worksheet = data.Sheets[sheetName];
             const filas = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
@@ -914,12 +861,12 @@
                 registrosPorDia[dia].push(horaDec);
                 totalRegistros++;
             }
-
+            
             if (totalRegistros === 0) throw new Error("No hay registros válidos");
-
+            
             let horaMinGlobal = 24;
             let horaMaxGlobal = 0;
-
+            
             for (let dia of daysOrder) {
                 if (registrosPorDia[dia].length > 0) {
                     const minDia = Math.min(...registrosPorDia[dia]);
@@ -928,25 +875,25 @@
                     horaMaxGlobal = Math.max(horaMaxGlobal, maxDia);
                 }
             }
-
+            
             horaMinGlobal = Math.max(0, Math.floor(horaMinGlobal) - 1);
             horaMaxGlobal = Math.min(24, Math.ceil(horaMaxGlobal) + 1);
-
+            
             const resultado = {
                 rangoGlobal: { min: horaMinGlobal, max: horaMaxGlobal },
                 dias: {}
             };
-
+            
             for (let dia of daysOrder) {
                 const horas = registrosPorDia[dia];
                 if (horas.length > 0) {
                     const horasUnicas = [...new Set(horas)];
                     const periodos = generarPeriodos(horasUnicas);
-
+                    
                     for (let periodo of periodos) {
                         periodo.count = horas.filter(h => h >= periodo.min && h <= periodo.max).length;
                     }
-
+                    
                     resultado.dias[dia] = {
                         periodos: periodos.filter(p => p.count > 0),
                         total: horas.length,
@@ -960,10 +907,10 @@
                     };
                 }
             }
-
+            
             resultado.horaMinGlobal = horaMinGlobal;
             resultado.horaMaxGlobal = horaMaxGlobal;
-
+            
             return resultado;
         }
 
@@ -975,15 +922,15 @@
 
         function renderVisualizacion() {
             const container = document.getElementById("visualizationRoot");
-
+            
             if (!datosProcesados.dias || Object.keys(datosProcesados.dias).length === 0) {
                 container.innerHTML = `<div class="no-data-msg">🔍 No se encontraron notificaciones válidas</div>`;
                 return;
             }
-
+            
             let maxFrecuenciaPeriodo = 0;
             const diasConDatos = [];
-
+            
             for (let dia of daysOrder) {
                 if (datosProcesados.dias[dia] && datosProcesados.dias[dia].total > 0) {
                     diasConDatos.push(dia);
@@ -992,28 +939,28 @@
                     }
                 }
             }
-
+            
             const horaMin = datosProcesados.horaMinGlobal;
             const horaMax = datosProcesados.horaMaxGlobal;
             const rangoHoras = horaMax - horaMin;
             const alturaTotal = Math.min(window.innerHeight - 160, 650);
-
+            
             const currentDay = getCurrentDay();
             const currentHour = getCurrentHourDecimal();
-
+            
             const timeMarkers = [];
             for (let h = Math.ceil(horaMin); h <= Math.floor(horaMax); h += 2) {
                 const posY = ((h - horaMin) / rangoHoras) * alturaTotal;
                 timeMarkers.push({ hora: h, posY: posY });
             }
-
+            
             let html = `
                 <div class="scroll-container">
                     <div class="timeline-container" style="height: ${alturaTotal + 35}px;">
                         <div class="time-scale">
                             <div class="time-markers" style="height: ${alturaTotal}px;">
             `;
-
+            
             for (let marker of timeMarkers) {
                 html += `
                     <div class="time-marker" style="top: ${marker.posY}px;">
@@ -1022,7 +969,7 @@
                     </div>
                 `;
             }
-
+            
             html += `
                             </div>
                         </div>
@@ -1030,31 +977,31 @@
                         <div style="flex: 1;">
                             <div class="days-header">
             `;
-
+            
             for (let dia of diasConDatos) {
                 html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
             }
-
+            
             html += `
                             </div>
                             <div class="days-grid" style="height: ${alturaTotal}px;">
             `;
-
+            
             for (let idx = 0; idx < diasConDatos.length; idx++) {
                 const dia = diasConDatos[idx];
                 const data = datosProcesados.dias[dia];
                 const isCurrentDay = (dia === currentDay);
-
+                
                 html += `<div class="day-column" style="height: ${alturaTotal}px;">`;
-
+                
                 for (let periodo of data.periodos) {
                     const topPercent = ((periodo.min - horaMin) / rangoHoras) * 100;
                     const bottomPercent = ((periodo.max - horaMin) / rangoHoras) * 100;
                     const heightPercent = bottomPercent - topPercent;
-
+                    
                     const intensityClass = getIntensityClass(periodo.count, maxFrecuenciaPeriodo);
                     const tooltip = `${periodo.label} · ${periodo.count} notificaciones`;
-
+                    
                     html += `
                         <div class="period-block ${intensityClass}" 
                              style="top: ${topPercent}%; height: ${heightPercent}%;"
@@ -1064,30 +1011,30 @@
                         </div>
                     `;
                 }
-
+                
                 if (isCurrentDay && currentHour >= horaMin && currentHour <= horaMax) {
                     const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
                     html += `<div class="current-time-line" style="top: ${currentPos}%;"></div>`;
                 }
-
+                
                 html += `</div>`;
             }
-
+            
             html += `
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-
+            
             container.innerHTML = html;
             actualizarUIAlarmas();
         }
-
+        
         function actualizarUIAlarmas() {
             const statusSpan = document.getElementById('alarmStatus');
             if (!statusSpan) return;
-
+            
             if (alarmEnabled) {
                 statusSpan.textContent = `🔔 Alarmas activas (${alarmMinutesBefore} min antes)`;
                 statusSpan.classList.add('active');
@@ -1100,10 +1047,10 @@
         function ocultarBotonUpload() {
             const uploadArea = document.getElementById('uploadArea');
             if (uploadArea) uploadArea.classList.add('hidden');
-
+            
             const alarmPanel = document.getElementById('alarmPanel');
             if (alarmPanel) alarmPanel.style.display = 'flex';
-
+            
             solicitarPermisoNotificaciones();
         }
 
@@ -1126,7 +1073,7 @@
         function configurarEventosAlarmas() {
             const alarmToggle = document.getElementById('alarmToggle');
             const alarmMinutesInput = document.getElementById('alarmMinutes');
-
+            
             if (alarmToggle) {
                 alarmToggle.addEventListener('change', (e) => {
                     alarmEnabled = e.target.checked;
@@ -1142,7 +1089,7 @@
                     actualizarUIAlarmas();
                 });
             }
-
+            
             if (alarmMinutesInput) {
                 alarmMinutesInput.addEventListener('change', (e) => {
                     let val = parseInt(e.target.value);
@@ -1150,7 +1097,7 @@
                     val = Math.min(60, Math.max(1, val));
                     alarmMinutesBefore = val;
                     e.target.value = val;
-
+                    
                     if (alarmEnabled) {
                         alarmasDisparadas.clear();
                         verificarAlarmas();
@@ -1165,7 +1112,7 @@
             if (!file) return;
             limpiarError();
             ocultarBotonUpload();
-
+            
             const reader = new FileReader();
             reader.onload = function (evt) {
                 try {
@@ -1189,7 +1136,7 @@
         function checkOrientation() {
             const warning = document.getElementById('orientationWarning');
             const mainContent = document.getElementById('mainContent');
-
+            
             if (window.matchMedia("(orientation: landscape)").matches) {
                 warning.classList.remove('show');
                 mainContent.classList.add('visible');
@@ -1201,22 +1148,24 @@
                 mainContent.classList.remove('visible');
             }
         }
-
+        
         window.addEventListener('resize', checkOrientation);
         window.addEventListener('load', checkOrientation);
-
+        
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && alarmEnabled) {
                 verificarAlarmas();
             }
         });
-
+        
         window.addEventListener('resize', () => {
             if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0 && window.matchMedia("(orientation: landscape)").matches) {
                 setTimeout(() => renderVisualizacion(), 100);
             }
         });
 
+        // Service Worker comentado para evitar error 404
+        /*
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -1224,6 +1173,7 @@
                     .catch(err => console.log('❌ Error Service Worker:', err));
             });
         }
+        */
     </script>
 </body>
 
