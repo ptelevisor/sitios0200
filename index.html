@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#111418">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Horario Notif">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Horario de Notificaciones</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+        }
+
+        body {
+            background: #0a0c10;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            background: #111418;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            border: none;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0c10;
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .orientation-warning.show {
+            display: flex;
+        }
+
+        .orientation-warning .warning-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .orientation-warning .warning-text {
+            color: #facc15;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .orientation-warning .warning-subtext {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            display: none;
+        }
+
+        .main-content.visible {
+            display: flex;
+        }
+
+        .upload-area {
+            background: #0f1318;
+            padding: 0.8rem;
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid #2a2f38;
+        }
+
+        .file-label {
+            background: #ef4444;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-label:hover {
+            background: #dc2626;
+            transform: scale(1.02);
+        }
+
+        .file-label.hidden {
+            display: none;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-area.hidden {
+            display: none;
+        }
+
+        .alarm-panel {
+            background: #0f1318;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #2a2f38;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .alarm-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a212c;
+            padding: 5px 12px;
+            border-radius: 30px;
+        }
+
+        .alarm-toggle label {
+            color: #eef2ff;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .alarm-toggle input {
+            width: 40px;
+            height: 20px;
+            appearance: none;
+            background: #2a2f38;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .alarm-toggle input:checked {
+            background: #ef4444;
+        }
+
+        .alarm-toggle input::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.2s;
+        }
+
+        .alarm-toggle input:checked::before {
+            left: 22px;
+        }
+
+        .alarm-minutes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a212c;
+            padding: 5px 12px;
+            border-radius: 30px;
+        }
+
+        .alarm-minutes label {
+            color: #eef2ff;
+            font-size: 0.8rem;
+        }
+
+        .alarm-minutes input {
+            background: #2a2f38;
+            border: none;
+            color: #facc15;
+            padding: 4px 8px;
+            border-radius: 20px;
+            width: 60px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .alarm-status {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #1a212c;
+            color: #9ca3af;
+        }
+
+        .alarm-status.active {
+            background: #ef4444;
+            color: white;
+        }
+
+        .timeline-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem 1rem 1rem 1rem;
+            min-height: 0;
+        }
+
+        .scroll-container {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            min-height: 0;
+        }
+
+        .timeline-container {
+            position: relative;
+            display: flex;
+            margin-left: 65px;
+            min-width: 700px;
+            height: 100%;
+        }
+
+        .time-scale {
+            position: absolute;
+            left: -65px;
+            top: 35px;
+            bottom: 0;
+            width: 55px;
+            background: #0f1318;
+            border-right: 1px solid #2a2f38;
+            z-index: 5;
+        }
+
+        .time-markers {
+            position: relative;
+            height: 100%;
+        }
+
+        .time-marker {
+            position: absolute;
+            width: 100%;
+            font-size: 0.65rem;
+            color: #6b7280;
+            text-align: right;
+            padding-right: 6px;
+            transform: translateY(-50%);
+            white-space: nowrap;
+        }
+
+        .time-marker-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #2a2f38;
+            opacity: 0.5;
+        }
+
+        .days-header {
+            display: flex;
+            background: #1a212c;
+            border-bottom: 2px solid #ef4444;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .day-header-cell {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            font-weight: 700;
+            color: #facc15;
+            font-size: 0.8rem;
+            border-right: 1px solid #2a2f38;
+            text-transform: capitalize;
+        }
+
+        .day-header-cell:last-child {
+            border-right: none;
+        }
+
+        .days-grid {
+            display: flex;
+            position: relative;
+            background: #0a0c10;
+            height: calc(100vh - 140px);
+            min-height: 400px;
+            max-height: 800px;
+        }
+
+        .day-column {
+            flex: 1;
+            position: relative;
+            border-right: 1px solid #2a2f38;
+            background: #0f1318;
+        }
+
+        .day-column:last-child {
+            border-right: none;
+        }
+
+        .period-block {
+            position: absolute;
+            left: 3px;
+            right: 3px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .period-block:hover {
+            transform: scaleX(1.02);
+            filter: brightness(1.1);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .period-label {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.5rem;
+            font-weight: 600;
+            color: #facc15;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 5px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .period-count {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .period-block.intensity-1 {
+            background: #fee2e2;
+        }
+
+        .period-block.intensity-1 .period-count {
+            color: #1f2937;
+        }
+
+        .period-block.intensity-2 {
+            background: #fecaca;
+        }
+
+        .period-block.intensity-2 .period-count {
+            color: #1f2937;
+        }
+
+        .period-block.intensity-3 {
+            background: #fca5a5;
+        }
+
+        .period-block.intensity-3 .period-count {
+            color: #1f2937;
+        }
+
+        .period-block.intensity-4 {
+            background: #f87171;
+        }
+
+        .period-block.intensity-4 .period-count {
+            color: white;
+        }
+
+        .period-block.intensity-5 {
+            background: #ef4444;
+        }
+
+        .period-block.intensity-6 {
+            background: #dc2626;
+        }
+
+        .period-block.intensity-7 {
+            background: #b91c1c;
+        }
+
+        .period-block.intensity-8 {
+            background: #991b1b;
+        }
+
+        .period-block.intensity-9 {
+            background: #7f1d1d;
+        }
+
+        .period-block.intensity-10 {
+            background: #450a0a;
+        }
+
+        .current-time-line {
+            position: absolute;
+            left: 3px;
+            right: 3px;
+            height: 2px;
+            background: #3b82f6;
+            box-shadow: 0 0 8px #3b82f6;
+            z-index: 20;
+            pointer-events: none;
+            border-radius: 2px;
+        }
+
+        .current-time-line::before {
+            content: "● AHORA";
+            position: absolute;
+            left: -40px;
+            top: -10px;
+            background: #3b82f6;
+            color: white;
+            font-size: 0.55rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .period-block[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000dd;
+            backdrop-filter: blur(8px);
+            color: #fff5e6;
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 16px;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid #ef4444;
+            margin-bottom: 4px;
+        }
+
+        .no-data-msg {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #9ca3af;
+            font-style: italic;
+            background: #0f1318;
+            border-radius: 16px;
+            margin: 1rem;
+        }
+
+        .error-message {
+            background: #7f1d1d;
+            color: #fee2e2;
+            padding: 10px 16px;
+            border-radius: 12px;
+            margin: 10px 12px;
+            font-size: 0.8rem;
+            border-left: 4px solid #ef4444;
+        }
+
+        @media (orientation: landscape) {
+            .orientation-warning {
+                display: none !important;
+            }
+
+            .main-content {
+                display: flex;
+            }
+
+            .main-content.visible {
+                display: flex;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .days-grid {
+                min-height: 300px;
+            }
+
+            .period-label {
+                font-size: 0.45rem;
+                top: -14px;
+            }
+
+            .period-count {
+                font-size: 0.65rem;
+            }
+
+            .day-header-cell {
+                padding: 5px 2px;
+                font-size: 0.7rem;
+            }
+
+            .timeline-container {
+                margin-left: 55px;
+            }
+
+            .time-scale {
+                left: -55px;
+                width: 45px;
+            }
+
+            .time-marker {
+                font-size: 0.55rem;
+            }
+
+            .alarm-panel {
+                padding: 0.5rem 0.8rem;
+            }
+
+            .alarm-toggle label,
+            .alarm-minutes label {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div class="orientation-warning" id="orientationWarning">
+        <div class="warning-icon">🔄</div>
+        <div class="warning-text">Gira tu teléfono</div>
+        <div class="warning-subtext">Para una mejor experiencia, usa la pantalla en horizontal</div>
+    </div>
+
+    <div class="dashboard main-content" id="mainContent">
+        <div class="upload-area" id="uploadArea">
+            <label class="file-label" id="uploadBtn">
+                📂 Subir Excel
+                <input type="file" id="excelInput" accept=".xlsx, .xls, .xlsm">
+            </label>
+        </div>
+
+        <div id="alarmPanel" class="alarm-panel" style="display: none;">
+            <div class="alarm-toggle">
+                <label>🔔 Alarma</label>
+                <input type="checkbox" id="alarmToggle">
+            </div>
+            <div class="alarm-minutes">
+                <label>⏰ Anticipación</label>
+                <input type="number" id="alarmMinutes" min="1" max="60" value="10">
+                <span style="color:#9ca3af;">min</span>
+            </div>
+            <div id="alarmStatus" class="alarm-status">⚪ Sin alarmas activas</div>
+        </div>
+
+        <div id="errorContainer" style="display: none;"></div>
+
+        <div id="visualizationRoot" class="timeline-view">
+            <div class="no-data-msg">
+                🌑 Sube tu archivo Excel<br>
+                📌 Columnas: <strong>diaSemana, horaNotificacion</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let datosProcesados = {};
+        let alarmInterval = null;
+        let alarmasDisparadas = new Set();
+        let audioContext = null;
+        let alarmEnabled = false;
+        let alarmMinutesBefore = 10;
+
+        const daysOrder = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+
+        function normalizarDia(diaRaw) {
+            if (!diaRaw) return null;
+            let dia = diaRaw.toString().trim().toLowerCase();
+            dia = dia.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (dia === "lunes") return "lunes";
+            if (dia === "martes") return "martes";
+            if (dia === "miercoles") return "miércoles";
+            if (dia === "jueves") return "jueves";
+            if (dia === "viernes") return "viernes";
+            if (dia === "sabado") return "sábado";
+            if (dia === "domingo") return "domingo";
+            return null;
+        }
+
+        function horaADecimal(horaRaw) {
+            if (!horaRaw) return null;
+            let horaStr = horaRaw.toString().trim();
+            if (horaStr.toLowerCase() === "sin notificacion" || horaStr === "no aplica") return null;
+            if (horaStr.includes(":")) {
+                const partes = horaStr.split(":");
+                let horas = parseInt(partes[0], 10);
+                let minutos = parseInt(partes[1], 10);
+                if (isNaN(horas)) return null;
+                if (isNaN(minutos)) minutos = 0;
+                return horas + (minutos / 60);
+            }
+            let num = parseFloat(horaStr);
+            if (!isNaN(num) && num >= 0 && num <= 1) return num * 24;
+            if (/^\d{3,4}$/.test(horaStr)) {
+                let horas = parseInt(horaStr.substring(0, 2), 10);
+                let minutos = parseInt(horaStr.substring(2, 4), 10);
+                if (!isNaN(horas) && !isNaN(minutos) && horas < 24 && minutos < 60) return horas + (minutos / 60);
+            }
+            return null;
+        }
+
+        function formatearHora(horaDecimal) {
+            const hora = Math.floor(horaDecimal);
+            const minutos = Math.round((horaDecimal - hora) * 60);
+            if (minutos === 60) {
+                return `${(hora + 1).toString().padStart(2, '0')}:00`;
+            }
+            return `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+        }
+
+        function generarPeriodos(horasUnicas) {
+            if (horasUnicas.length === 0) return [];
+            horasUnicas.sort((a, b) => a - b);
+
+            let grupos = [];
+            let grupoActual = [horasUnicas[0]];
+
+            for (let i = 1; i < horasUnicas.length; i++) {
+                if (horasUnicas[i] - horasUnicas[i - 1] <= 2.0) {
+                    grupoActual.push(horasUnicas[i]);
+                } else {
+                    grupos.push([...grupoActual]);
+                    grupoActual = [horasUnicas[i]];
+                }
+            }
+            grupos.push([...grupoActual]);
+
+            let gruposDivididos = [];
+            for (let grupo of grupos) {
+                if (grupo.length === 0) continue;
+                const duracion = Math.max(...grupo) - Math.min(...grupo);
+
+                if (duracion > 4.0 && grupo.length > 1) {
+                    let subgrupo = [grupo[0]];
+                    for (let i = 1; i < grupo.length; i++) {
+                        const subDuracion = grupo[i] - subgrupo[0];
+                        if (subDuracion <= 4.0) {
+                            subgrupo.push(grupo[i]);
+                        } else {
+                            if (subgrupo.length > 0) gruposDivididos.push([...subgrupo]);
+                            subgrupo = [grupo[i]];
+                        }
+                    }
+                    if (subgrupo.length > 0) gruposDivididos.push([...subgrupo]);
+                } else {
+                    gruposDivididos.push([...grupo]);
+                }
+            }
+
+            return gruposDivididos.map(g => ({
+                min: Math.min(...g),
+                max: Math.max(...g),
+                label: `${formatearHora(Math.min(...g))} - ${formatearHora(Math.max(...g))}`,
+                horas: g,
+                count: 0
+            }));
+        }
+
+        function getCurrentDay() {
+            const now = new Date();
+            const daysSpanish = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+            return daysSpanish[now.getDay()];
+        }
+
+        function getCurrentHourDecimal() {
+            const now = new Date();
+            return now.getHours() + (now.getMinutes() / 60);
+        }
+
+        function reproducirBeep() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.3;
+
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            } catch (e) {
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = context.createOscillator();
+                    const gain = context.createGain();
+                    oscillator.connect(gain);
+                    gain.connect(context.destination);
+                    oscillator.frequency.value = 880;
+                    gain.gain.value = 0.3;
+                    oscillator.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, context.currentTime + 0.5);
+                    oscillator.stop(context.currentTime + 0.5);
+                } catch (err) {
+                    console.log("No se pudo reproducir beep:", err);
+                }
+            }
+
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        function verificarAlarmas() {
+            if (!alarmEnabled || !datosProcesados.dias) return;
+
+            const ahora = new Date();
+            const diaActual = getCurrentDay();
+            const horaActualDecimal = getCurrentHourDecimal();
+            const minAntes = alarmMinutesBefore;
+
+            const dataDia = datosProcesados.dias[diaActual];
+            if (!dataDia || !dataDia.periodos) return;
+
+            for (let periodo of dataDia.periodos) {
+                const horaInicio = periodo.min;
+                const tiempoAlarma = horaInicio - (minAntes / 60);
+
+                const alarmKey = `${diaActual}_${periodo.label}_${minAntes}`;
+
+                if (alarmasDisparadas.has(alarmKey)) continue;
+
+                if (horaActualDecimal >= tiempoAlarma && horaActualDecimal < horaInicio) {
+                    console.log(`🎵 Sonando alarma para ${periodo.label} (${minAntes} min antes) - ${new Date().toLocaleTimeString()}`);
+                    reproducirBeep();
+                    alarmasDisparadas.add(alarmKey);
+
+                    if (Notification.permission === 'granted') {
+                        new Notification(`⏰ Alerta: ${periodo.label}`, {
+                            body: `Comienza en ${minAntes} minutos`,
+                            silent: true,
+                            vibrate: [200, 100, 200]
+                        });
+                    }
+
+                    resaltarPeriodoEnVivo(diaActual, periodo.label);
+                }
+
+                if (horaActualDecimal > horaInicio) {
+                    if (alarmasDisparadas.has(alarmKey)) {
+                        alarmasDisparadas.delete(alarmKey);
+                    }
+                }
+            }
+        }
+
+        function resaltarPeriodoEnVivo(dia, periodoLabel) {
+            const columnas = document.querySelectorAll('.day-column');
+            const diasConDatos = [];
+            for (let d of daysOrder) {
+                if (datosProcesados.dias[d] && datosProcesados.dias[d].total > 0) {
+                    diasConDatos.push(d);
+                }
+            }
+
+            const diaIndex = diasConDatos.findIndex(d => d === dia);
+            if (diaIndex === -1) return;
+
+            const columna = columnas[diaIndex];
+            if (!columna) return;
+
+            const bloques = columna.querySelectorAll('.period-block');
+            for (let bloque of bloques) {
+                const labelSpan = bloque.querySelector('.period-label');
+                if (labelSpan && labelSpan.textContent === periodoLabel) {
+                    bloque.style.outline = '3px solid #facc15';
+                    bloque.style.outlineOffset = '2px';
+                    setTimeout(() => {
+                        bloque.style.outline = '';
+                    }, 3000);
+                }
+            }
+        }
+
+        function solicitarPermisoNotificaciones() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function iniciarSistemaAlarmas() {
+            if (alarmInterval) clearInterval(alarmInterval);
+
+            alarmInterval = setInterval(() => {
+                verificarAlarmas();
+            }, 30000);
+
+            verificarAlarmas();
+        }
+
+        function detenerSistemaAlarmas() {
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+        }
+
+        function procesarExcel(data) {
+            const registrosPorDia = {};
+            for (let dia of daysOrder) {
+                registrosPorDia[dia] = [];
+            }
+
+            const sheetName = data.SheetNames[0];
+            const worksheet = data.Sheets[sheetName];
+            const filas = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+            if (!filas || filas.length < 2) throw new Error("El archivo está vacío o no tiene datos.");
+
+            let col = { diaSemana: -1, horaNotificacion: -1 };
+
+            for (let r = 0; r < Math.min(5, filas.length); r++) {
+                const row = filas[r];
+                if (!row) continue;
+                for (let c = 0; c < row.length; c++) {
+                    const val = row[c] ? row[c].toString().toLowerCase().trim() : "";
+                    if ((val === "diasemana" || val === "dia semana" || val === "dia") && col.diaSemana === -1) col.diaSemana = c;
+                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && col.horaNotificacion === -1) col.horaNotificacion = c;
+                }
+                if (col.diaSemana !== -1 && col.horaNotificacion !== -1) break;
+            }
+
+            if (col.diaSemana === -1 || col.horaNotificacion === -1) {
+                for (let r = 1; r < Math.min(30, filas.length); r++) {
+                    const row = filas[r];
+                    if (!row) continue;
+                    for (let c = 0; c < row.length; c++) {
+                        const val = row[c] ? row[c].toString() : "";
+                        const posibleDia = normalizarDia(val);
+                        if (posibleDia && col.diaSemana === -1 && daysOrder.includes(posibleDia)) col.diaSemana = c;
+                        const horaDec = horaADecimal(val);
+                        if (horaDec !== null && col.horaNotificacion === -1) col.horaNotificacion = c;
+                    }
+                    if (col.diaSemana !== -1 && col.horaNotificacion !== -1) break;
+                }
+            }
+
+            if (col.diaSemana === -1) throw new Error("No se encontró columna 'diaSemana'");
+            if (col.horaNotificacion === -1) throw new Error("No se encontró columna 'horaNotificacion'");
+
+            let inicioDatos = 0;
+            for (let i = 0; i < filas.length; i++) {
+                const f = filas[i];
+                if (f && f[col.diaSemana] && normalizarDia(f[col.diaSemana])) {
+                    inicioDatos = i;
+                    break;
+                }
+            }
+
+            let totalRegistros = 0;
+            for (let i = inicioDatos; i < filas.length; i++) {
+                const row = filas[i];
+                if (!row || row.length === 0) continue;
+                let diaRaw = col.diaSemana < row.length ? row[col.diaSemana] : null;
+                let horaRaw = col.horaNotificacion < row.length ? row[col.horaNotificacion] : null;
+
+                if (diaRaw && typeof diaRaw === 'object' && diaRaw.t) diaRaw = diaRaw.t;
+                if (horaRaw && typeof horaRaw === 'object' && horaRaw.t) horaRaw = horaRaw.t;
+
+                const dia = normalizarDia(diaRaw);
+                if (!dia) continue;
+                const horaDec = horaADecimal(horaRaw);
+                if (horaDec === null) continue;
+
+                registrosPorDia[dia].push(horaDec);
+                totalRegistros++;
+            }
+
+            if (totalRegistros === 0) throw new Error("No hay registros válidos");
+
+            let horaMinGlobal = 24;
+            let horaMaxGlobal = 0;
+
+            for (let dia of daysOrder) {
+                if (registrosPorDia[dia].length > 0) {
+                    const minDia = Math.min(...registrosPorDia[dia]);
+                    const maxDia = Math.max(...registrosPorDia[dia]);
+                    horaMinGlobal = Math.min(horaMinGlobal, minDia);
+                    horaMaxGlobal = Math.max(horaMaxGlobal, maxDia);
+                }
+            }
+
+            horaMinGlobal = Math.max(0, Math.floor(horaMinGlobal) - 1);
+            horaMaxGlobal = Math.min(24, Math.ceil(horaMaxGlobal) + 1);
+
+            const resultado = {
+                rangoGlobal: { min: horaMinGlobal, max: horaMaxGlobal },
+                dias: {}
+            };
+
+            for (let dia of daysOrder) {
+                const horas = registrosPorDia[dia];
+                if (horas.length > 0) {
+                    const horasUnicas = [...new Set(horas)];
+                    const periodos = generarPeriodos(horasUnicas);
+
+                    for (let periodo of periodos) {
+                        periodo.count = horas.filter(h => h >= periodo.min && h <= periodo.max).length;
+                    }
+
+                    resultado.dias[dia] = {
+                        periodos: periodos.filter(p => p.count > 0),
+                        total: horas.length,
+                        horas: horas
+                    };
+                } else {
+                    resultado.dias[dia] = {
+                        periodos: [],
+                        total: 0,
+                        horas: []
+                    };
+                }
+            }
+
+            resultado.horaMinGlobal = horaMinGlobal;
+            resultado.horaMaxGlobal = horaMaxGlobal;
+
+            return resultado;
+        }
+
+        function getIntensityClass(count, maxCount) {
+            if (maxCount === 0) return 'intensity-1';
+            const intensity = Math.ceil((count / maxCount) * 10);
+            return `intensity-${Math.min(10, Math.max(1, intensity))}`;
+        }
+
+        function renderVisualizacion() {
+            const container = document.getElementById("visualizationRoot");
+
+            if (!datosProcesados.dias || Object.keys(datosProcesados.dias).length === 0) {
+                container.innerHTML = `<div class="no-data-msg">🔍 No se encontraron notificaciones válidas</div>`;
+                return;
+            }
+
+            let maxFrecuenciaPeriodo = 0;
+            const diasConDatos = [];
+
+            for (let dia of daysOrder) {
+                if (datosProcesados.dias[dia] && datosProcesados.dias[dia].total > 0) {
+                    diasConDatos.push(dia);
+                    for (let periodo of datosProcesados.dias[dia].periodos) {
+                        maxFrecuenciaPeriodo = Math.max(maxFrecuenciaPeriodo, periodo.count);
+                    }
+                }
+            }
+
+            const horaMin = datosProcesados.horaMinGlobal;
+            const horaMax = datosProcesados.horaMaxGlobal;
+            const rangoHoras = horaMax - horaMin;
+            const alturaTotal = Math.min(window.innerHeight - 160, 650);
+
+            const currentDay = getCurrentDay();
+            const currentHour = getCurrentHourDecimal();
+
+            const timeMarkers = [];
+            for (let h = Math.ceil(horaMin); h <= Math.floor(horaMax); h += 2) {
+                const posY = ((h - horaMin) / rangoHoras) * alturaTotal;
+                timeMarkers.push({ hora: h, posY: posY });
+            }
+
+            let html = `
+                <div class="scroll-container">
+                    <div class="timeline-container" style="height: ${alturaTotal + 35}px;">
+                        <div class="time-scale">
+                            <div class="time-markers" style="height: ${alturaTotal}px;">
+            `;
+
+            for (let marker of timeMarkers) {
+                html += `
+                    <div class="time-marker" style="top: ${marker.posY}px;">
+                        ${formatearHora(marker.hora)}
+                        <div class="time-marker-line" style="top: 50%;"></div>
+                    </div>
+                `;
+            }
+
+            html += `
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1;">
+                            <div class="days-header">
+            `;
+
+            for (let dia of diasConDatos) {
+                html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
+            }
+
+            html += `
+                            </div>
+                            <div class="days-grid" style="height: ${alturaTotal}px;">
+            `;
+
+            for (let idx = 0; idx < diasConDatos.length; idx++) {
+                const dia = diasConDatos[idx];
+                const data = datosProcesados.dias[dia];
+                const isCurrentDay = (dia === currentDay);
+
+                html += `<div class="day-column" style="height: ${alturaTotal}px;">`;
+
+                for (let periodo of data.periodos) {
+                    const topPercent = ((periodo.min - horaMin) / rangoHoras) * 100;
+                    const bottomPercent = ((periodo.max - horaMin) / rangoHoras) * 100;
+                    const heightPercent = bottomPercent - topPercent;
+
+                    const intensityClass = getIntensityClass(periodo.count, maxFrecuenciaPeriodo);
+                    const tooltip = `${periodo.label} · ${periodo.count} notificaciones`;
+
+                    html += `
+                        <div class="period-block ${intensityClass}" 
+                             style="top: ${topPercent}%; height: ${heightPercent}%;"
+                             data-tooltip="${tooltip.replace(/"/g, '&quot;')}">
+                            <div class="period-label">${periodo.label}</div>
+                            <div class="period-count">${periodo.count}</div>
+                        </div>
+                    `;
+                }
+
+                if (isCurrentDay && currentHour >= horaMin && currentHour <= horaMax) {
+                    const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
+                    html += `<div class="current-time-line" style="top: ${currentPos}%;"></div>`;
+                }
+
+                html += `</div>`;
+            }
+
+            html += `
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            actualizarUIAlarmas();
+        }
+
+        function actualizarUIAlarmas() {
+            const statusSpan = document.getElementById('alarmStatus');
+            if (!statusSpan) return;
+
+            if (alarmEnabled) {
+                statusSpan.textContent = `🔔 Alarmas activas (${alarmMinutesBefore} min antes)`;
+                statusSpan.classList.add('active');
+            } else {
+                statusSpan.textContent = '⚪ Alarmas desactivadas';
+                statusSpan.classList.remove('active');
+            }
+        }
+
+        function ocultarBotonUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            if (uploadArea) uploadArea.classList.add('hidden');
+
+            const alarmPanel = document.getElementById('alarmPanel');
+            if (alarmPanel) alarmPanel.style.display = 'flex';
+
+            solicitarPermisoNotificaciones();
+        }
+
+        function mostrarError(msg) {
+            const errDiv = document.getElementById("errorContainer");
+            if (errDiv) {
+                errDiv.style.display = "block";
+                errDiv.innerHTML = `<div class="error-message">⚠️ ${msg}</div>`;
+                setTimeout(() => {
+                    errDiv.style.display = "none";
+                }, 5000);
+            }
+        }
+
+        function limpiarError() {
+            const e = document.getElementById("errorContainer");
+            if (e) e.style.display = "none";
+        }
+
+        function configurarEventosAlarmas() {
+            const alarmToggle = document.getElementById('alarmToggle');
+            const alarmMinutesInput = document.getElementById('alarmMinutes');
+
+            if (alarmToggle) {
+                alarmToggle.addEventListener('change', (e) => {
+                    alarmEnabled = e.target.checked;
+                    if (alarmEnabled) {
+                        iniciarSistemaAlarmas();
+                        setTimeout(() => {
+                            reproducirBeep();
+                        }, 100);
+                    } else {
+                        detenerSistemaAlarmas();
+                        alarmasDisparadas.clear();
+                    }
+                    actualizarUIAlarmas();
+                });
+            }
+
+            if (alarmMinutesInput) {
+                alarmMinutesInput.addEventListener('change', (e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val)) val = 10;
+                    val = Math.min(60, Math.max(1, val));
+                    alarmMinutesBefore = val;
+                    e.target.value = val;
+
+                    if (alarmEnabled) {
+                        alarmasDisparadas.clear();
+                        verificarAlarmas();
+                    }
+                    actualizarUIAlarmas();
+                });
+            }
+        }
+
+        document.getElementById("excelInput").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            limpiarError();
+            ocultarBotonUpload();
+
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    datosProcesados = procesarExcel(wb);
+                    renderVisualizacion();
+                    configurarEventosAlarmas();
+                } catch (err) {
+                    mostrarError(err.message);
+                    const uploadArea = document.getElementById('uploadArea');
+                    if (uploadArea) uploadArea.classList.remove('hidden');
+                    const alarmPanel = document.getElementById('alarmPanel');
+                    if (alarmPanel) alarmPanel.style.display = 'none';
+                }
+            };
+            reader.onerror = () => mostrarError("No se pudo leer el archivo");
+            reader.readAsArrayBuffer(file);
+        });
+
+        function checkOrientation() {
+            const warning = document.getElementById('orientationWarning');
+            const mainContent = document.getElementById('mainContent');
+
+            if (window.matchMedia("(orientation: landscape)").matches) {
+                warning.classList.remove('show');
+                mainContent.classList.add('visible');
+                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0) {
+                    setTimeout(() => renderVisualizacion(), 100);
+                }
+            } else {
+                warning.classList.add('show');
+                mainContent.classList.remove('visible');
+            }
+        }
+
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('load', checkOrientation);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && alarmEnabled) {
+                verificarAlarmas();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0 && window.matchMedia("(orientation: landscape)").matches) {
+                setTimeout(() => renderVisualizacion(), 100);
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('✅ Service Worker registrado:', reg))
+                    .catch(err => console.log('❌ Error Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
