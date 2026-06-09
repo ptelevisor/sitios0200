@@ -401,7 +401,7 @@
         }
 
         .current-time-line::before {
-            content: "● AHORA";
+            content: "● " attr(data-tiempo);
             position: absolute;
             left: -40px;
             top: -10px;
@@ -547,6 +547,7 @@
         let audioContext = null;
         let alarmEnabled = false;
         let alarmMinutesBefore = 10;
+        let tiempoInterval = null;
 
         const daysOrder = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
 
@@ -652,6 +653,54 @@
         function getCurrentHourDecimal() {
             const now = new Date();
             return now.getHours() + (now.getMinutes() / 60);
+        }
+
+        function calcularTiempoRestante() {
+            if (!datosProcesados.dias) return "00:00:00";
+            
+            const ahora = new Date();
+            const diaActual = getCurrentDay();
+            const horaActualDecimal = getCurrentHourDecimal();
+            const dataDia = datosProcesados.dias[diaActual];
+            
+            if (!dataDia || dataDia.periodos.length === 0) return "00:00:00";
+            
+            // Buscar la próxima notificación (hora de inicio de periodo)
+            let proximaHora = null;
+            for (let periodo of dataDia.periodos) {
+                if (periodo.min > horaActualDecimal) {
+                    proximaHora = periodo.min;
+                    break;
+                }
+            }
+            
+            if (proximaHora === null) return "00:00:00";
+            
+            // Calcular diferencia
+            const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora.getMilliseconds();
+            const destinoEnMs = Math.floor(proximaHora) * 3600000 + (proximaHora % 1) * 60 * 60000;
+            
+            let diffMs = destinoEnMs - ahoraEnMs;
+            if (diffMs < 0) diffMs = 0;
+            
+            const totalSegundos = Math.floor(diffMs / 1000);
+            const horas = Math.floor(totalSegundos / 3600);
+            const minutos = Math.floor((totalSegundos % 3600) / 60);
+            const segundos = totalSegundos % 60;
+            
+            return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+        }
+
+        function iniciarActualizacionTiempo() {
+            if (tiempoInterval) clearInterval(tiempoInterval);
+            
+            tiempoInterval = setInterval(() => {
+                const linea = document.querySelector('.current-time-line');
+                if (linea && datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0) {
+                    const nuevoTiempo = calcularTiempoRestante();
+                    linea.setAttribute('data-tiempo', nuevoTiempo);
+                }
+            }, 1000);
         }
 
         function reproducirBeep() {
@@ -1014,7 +1063,8 @@
                 
                 if (isCurrentDay && currentHour >= horaMin && currentHour <= horaMax) {
                     const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
-                    html += `<div class="current-time-line" style="top: ${currentPos}%;"></div>`;
+                    const tiempoRestante = calcularTiempoRestante();
+                    html += `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRestante}"></div>`;
                 }
                 
                 html += `</div>`;
@@ -1029,6 +1079,7 @@
             
             container.innerHTML = html;
             actualizarUIAlarmas();
+            iniciarActualizacionTiempo();
         }
         
         function actualizarUIAlarmas() {
