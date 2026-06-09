@@ -1,6 +1,7 @@
 const CACHE_NAME = 'horario-notificaciones-v1';
 const urlsToCache = [
-  './',
+  './icon-192x192.png',
+  './icon-512x512.png',
   './index.html',
   './manifest.json',
   'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js'
