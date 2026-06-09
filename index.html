@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="Horario Notif">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='240' fill='%23111418' stroke='%23ef4444' stroke-width='16'/%3E%3Ccircle cx='256' cy='256' r='200' fill='%23ef4444'/%3E%3Crect x='246' y='120' width='20' height='136' rx='10' fill='%23111418'/%3E%3Crect x='246' y='280' width='20' height='40' rx='10' fill='%23111418'/%3E%3Ccircle cx='256' cy='340' r='16' fill='%23111418'/%3E%3Cpath d='M180 180 L220 220' stroke='%23111418' stroke-width='16' stroke-linecap='round'/%3E%3Cpath d='M332 180 L292 220' stroke='%23111418' stroke-width='16' stroke-linecap='round'/%3E%3C/svg%3E">
-    <title>Horario de Notificaciones</title>
+    <title>Horario de Notificaciones · Vista de Bloques</title>
     <style>
         * {
             box-sizing: border-box;
@@ -80,13 +80,9 @@
 
         .main-content {
             flex: 1;
-            display: flex;
+            display: none;
             flex-direction: column;
             min-height: 100vh;
-        }
-
-        .main-content {
-            display: none;
         }
 
         .main-content.visible {
@@ -512,14 +508,14 @@
     <div class="dashboard main-content" id="mainContent">
         <div class="upload-area" id="uploadArea">
             <label class="file-label" id="uploadBtn">
-                📂 Subir Excel
+                📂 Subir archivo Excel
                 <input type="file" id="excelInput" accept=".xlsx, .xls, .xlsm">
             </label>
         </div>
 
         <div id="alarmPanel" class="alarm-panel" style="display: none;">
             <div class="alarm-toggle">
-                <label>🔔 Alarma</label>
+                <label>🔔 Alarma inteligente</label>
                 <input type="checkbox" id="alarmToggle">
             </div>
             <div class="alarm-minutes">
@@ -534,8 +530,9 @@
 
         <div id="visualizationRoot" class="timeline-view">
             <div class="no-data-msg">
-                🌑 Sube tu archivo Excel<br>
-                📌 Columnas: <strong>diaSemana, horaNotificacion</strong>
+                🌑 Sube tu archivo con horarios<br>
+                📌 Columnas esperadas: <strong>diaSemana</strong> y <strong>horaNotificacion</strong><br>
+                🕒 Soporta formatos: "lunes", "15:30", "14.5", "1430" y más.
             </div>
         </div>
     </div>
@@ -599,10 +596,8 @@
         function generarPeriodos(horasUnicas) {
             if (horasUnicas.length === 0) return [];
             horasUnicas.sort((a, b) => a - b);
-            
             let grupos = [];
             let grupoActual = [horasUnicas[0]];
-            
             for (let i = 1; i < horasUnicas.length; i++) {
                 if (horasUnicas[i] - horasUnicas[i - 1] <= 2.0) {
                     grupoActual.push(horasUnicas[i]);
@@ -612,12 +607,10 @@
                 }
             }
             grupos.push([...grupoActual]);
-            
             let gruposDivididos = [];
             for (let grupo of grupos) {
                 if (grupo.length === 0) continue;
                 const duracion = Math.max(...grupo) - Math.min(...grupo);
-                
                 if (duracion > 4.0 && grupo.length > 1) {
                     let subgrupo = [grupo[0]];
                     for (let i = 1; i < grupo.length; i++) {
@@ -634,7 +627,6 @@
                     gruposDivididos.push([...grupo]);
                 }
             }
-            
             return gruposDivididos.map(g => ({
                 min: Math.min(...g),
                 max: Math.max(...g),
@@ -657,28 +649,20 @@
 
         function calcularTiempoRestante() {
             if (!datosProcesados.dias) return "00:00:00";
-            
             const ahora = new Date();
             const diaActual = getCurrentDay();
             const horaActualDecimal = getCurrentHourDecimal();
             const dataDia = datosProcesados.dias[diaActual];
-            
             if (!dataDia || dataDia.periodos.length === 0) return "00:00:00";
-            
             let horaDestino = null;
             let esDentroDeRango = false;
-            
-            // Buscar si está dentro de algún periodo
             for (let periodo of dataDia.periodos) {
                 if (horaActualDecimal >= periodo.min && horaActualDecimal <= periodo.max) {
-                    // Está dentro del rango -> mostrar tiempo que falta para que TERMINE
                     horaDestino = periodo.max;
                     esDentroDeRango = true;
                     break;
                 }
             }
-            
-            // Si no está dentro de ningún periodo, buscar el próximo
             if (!esDentroDeRango) {
                 for (let periodo of dataDia.periodos) {
                     if (periodo.min > horaActualDecimal) {
@@ -687,293 +671,166 @@
                     }
                 }
             }
-            
             if (horaDestino === null) return "00:00:00";
-            
-            // Calcular diferencia
             const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora.getMilliseconds();
             const destinoEnMs = Math.floor(horaDestino) * 3600000 + (horaDestino % 1) * 60 * 60000;
-            
             let diffMs = destinoEnMs - ahoraEnMs;
             if (diffMs < 0) diffMs = 0;
-            
             const totalSegundos = Math.floor(diffMs / 1000);
             const horas = Math.floor(totalSegundos / 3600);
             const minutos = Math.floor((totalSegundos % 3600) / 60);
             const segundos = totalSegundos % 60;
-            
             return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
         }
 
         function iniciarActualizacionTiempo() {
             if (tiempoInterval) clearInterval(tiempoInterval);
-            
             tiempoInterval = setInterval(() => {
                 const linea = document.querySelector('.current-time-line');
                 if (linea && datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0) {
-                    const nuevoTiempo = calcularTiempoRestante();
-                    linea.setAttribute('data-tiempo', nuevoTiempo);
+                    linea.setAttribute('data-tiempo', calcularTiempoRestante());
                 }
             }, 1000);
         }
 
         function reproducirBeep() {
             try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                
+                const Context = window.AudioContext || window.webkitAudioContext;
+                if (!audioContext) audioContext = new Context();
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-                
                 oscillator.frequency.value = 880;
-                gainNode.gain.value = 0.3;
-                
+                gainNode.gain.value = 0.25;
                 oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-                oscillator.stop(audioContext.currentTime + 0.5);
-                
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-            } catch (e) {
-                try {
-                    const context = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = context.createOscillator();
-                    const gain = context.createGain();
-                    oscillator.connect(gain);
-                    gain.connect(context.destination);
-                    oscillator.frequency.value = 880;
-                    gain.gain.value = 0.3;
-                    oscillator.start();
-                    gain.gain.exponentialRampToValueAtTime(0.00001, context.currentTime + 0.5);
-                    oscillator.stop(context.currentTime + 0.5);
-                } catch (err) {
-                    console.log("No se pudo reproducir beep:", err);
-                }
-            }
-            
-            if (navigator.vibrate) {
-                navigator.vibrate([200, 100, 200]);
-            }
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.6);
+                oscillator.stop(audioContext.currentTime + 0.6);
+                if (audioContext.state === 'suspended') audioContext.resume();
+            } catch (e) { console.warn("Audio no disponible", e); }
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
 
         function verificarAlarmas() {
             if (!alarmEnabled || !datosProcesados.dias) return;
-            
             const ahora = new Date();
             const diaActual = getCurrentDay();
             const horaActualDecimal = getCurrentHourDecimal();
-            const minAntes = alarmMinutesBefore;
-            
             const dataDia = datosProcesados.dias[diaActual];
             if (!dataDia || !dataDia.periodos) return;
-            
             for (let periodo of dataDia.periodos) {
-                const horaInicio = periodo.min;
-                const tiempoAlarma = horaInicio - (minAntes / 60);
-                
-                const alarmKey = `${diaActual}_${periodo.label}_${minAntes}`;
-                
+                const tiempoAlarma = periodo.min - (alarmMinutesBefore / 60);
+                const alarmKey = `${diaActual}_${periodo.label}_${alarmMinutesBefore}`;
                 if (alarmasDisparadas.has(alarmKey)) continue;
-                
-                if (horaActualDecimal >= tiempoAlarma && horaActualDecimal < horaInicio) {
-                    console.log(`🎵 Sonando alarma para ${periodo.label} (${minAntes} min antes) - ${new Date().toLocaleTimeString()}`);
+                if (horaActualDecimal >= tiempoAlarma && horaActualDecimal < periodo.min) {
                     reproducirBeep();
                     alarmasDisparadas.add(alarmKey);
-                    
                     if (Notification.permission === 'granted') {
-                        new Notification(`⏰ Alerta: ${periodo.label}`, {
-                            body: `Comienza en ${minAntes} minutos`,
-                            silent: true,
-                            vibrate: [200, 100, 200]
-                        });
+                        new Notification(`⏰ ${periodo.label}`, { body: `Comienza en ${alarmMinutesBefore} minutos`, silent: true });
                     }
-                    
                     resaltarPeriodoEnVivo(diaActual, periodo.label);
                 }
-                
-                if (horaActualDecimal > horaInicio) {
-                    if (alarmasDisparadas.has(alarmKey)) {
-                        alarmasDisparadas.delete(alarmKey);
-                    }
-                }
+                if (horaActualDecimal > periodo.min) alarmasDisparadas.delete(alarmKey);
             }
         }
-        
+
         function resaltarPeriodoEnVivo(dia, periodoLabel) {
             const columnas = document.querySelectorAll('.day-column');
-            const diasConDatos = [];
-            for (let d of daysOrder) {
-                if (datosProcesados.dias[d] && datosProcesados.dias[d].total > 0) {
-                    diasConDatos.push(d);
-                }
-            }
-            
+            const diasConDatos = daysOrder.filter(d => datosProcesados.dias[d]?.total > 0);
             const diaIndex = diasConDatos.findIndex(d => d === dia);
             if (diaIndex === -1) return;
-            
             const columna = columnas[diaIndex];
             if (!columna) return;
-            
             const bloques = columna.querySelectorAll('.period-block');
             for (let bloque of bloques) {
                 const labelSpan = bloque.querySelector('.period-label');
                 if (labelSpan && labelSpan.textContent === periodoLabel) {
                     bloque.style.outline = '3px solid #facc15';
                     bloque.style.outlineOffset = '2px';
-                    setTimeout(() => {
-                        bloque.style.outline = '';
-                    }, 3000);
+                    setTimeout(() => bloque.style.outline = '', 3000);
                 }
-            }
-        }
-
-        function solicitarPermisoNotificaciones() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
             }
         }
 
         function iniciarSistemaAlarmas() {
             if (alarmInterval) clearInterval(alarmInterval);
-            
-            alarmInterval = setInterval(() => {
-                verificarAlarmas();
-            }, 30000);
-            
+            alarmInterval = setInterval(() => verificarAlarmas(), 15000);
             verificarAlarmas();
         }
 
         function detenerSistemaAlarmas() {
-            if (alarmInterval) {
-                clearInterval(alarmInterval);
-                alarmInterval = null;
-            }
+            if (alarmInterval) clearInterval(alarmInterval);
+            alarmInterval = null;
         }
 
-        function procesarExcel(data) {
-            const registrosPorDia = {};
-            for (let dia of daysOrder) {
-                registrosPorDia[dia] = [];
-            }
-            
-            const sheetName = data.SheetNames[0];
-            const worksheet = data.Sheets[sheetName];
-            const filas = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-            if (!filas || filas.length < 2) throw new Error("El archivo está vacío o no tiene datos.");
-
-            let col = { diaSemana: -1, horaNotificacion: -1 };
-
-            for (let r = 0; r < Math.min(5, filas.length); r++) {
+        function procesarExcel(workbook) {
+            const registrosPorDia = Object.fromEntries(daysOrder.map(d => [d, []]));
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const filas = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+            if (!filas?.length) throw new Error("Archivo sin datos.");
+            let colDia = -1, colHora = -1;
+            for (let r = 0; r < Math.min(10, filas.length); r++) {
                 const row = filas[r];
                 if (!row) continue;
                 for (let c = 0; c < row.length; c++) {
-                    const val = row[c] ? row[c].toString().toLowerCase().trim() : "";
-                    if ((val === "diasemana" || val === "dia semana" || val === "dia") && col.diaSemana === -1) col.diaSemana = c;
-                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && col.horaNotificacion === -1) col.horaNotificacion = c;
+                    const val = row[c]?.toString().toLowerCase().trim() || "";
+                    if ((val === "diasemana" || val === "dia semana" || val === "dia") && colDia === -1) colDia = c;
+                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && colHora === -1) colHora = c;
                 }
-                if (col.diaSemana !== -1 && col.horaNotificacion !== -1) break;
+                if (colDia !== -1 && colHora !== -1) break;
             }
-
-            if (col.diaSemana === -1 || col.horaNotificacion === -1) {
+            if (colDia === -1 || colHora === -1) {
                 for (let r = 1; r < Math.min(30, filas.length); r++) {
                     const row = filas[r];
                     if (!row) continue;
                     for (let c = 0; c < row.length; c++) {
-                        const val = row[c] ? row[c].toString() : "";
-                        const posibleDia = normalizarDia(val);
-                        if (posibleDia && col.diaSemana === -1 && daysOrder.includes(posibleDia)) col.diaSemana = c;
-                        const horaDec = horaADecimal(val);
-                        if (horaDec !== null && col.horaNotificacion === -1) col.horaNotificacion = c;
+                        const val = row[c]?.toString() || "";
+                        if (colDia === -1 && normalizarDia(val)) colDia = c;
+                        if (colHora === -1 && horaADecimal(val) !== null) colHora = c;
                     }
-                    if (col.diaSemana !== -1 && col.horaNotificacion !== -1) break;
+                    if (colDia !== -1 && colHora !== -1) break;
                 }
             }
-
-            if (col.diaSemana === -1) throw new Error("No se encontró columna 'diaSemana'");
-            if (col.horaNotificacion === -1) throw new Error("No se encontró columna 'horaNotificacion'");
-
-            let inicioDatos = 0;
+            if (colDia === -1) throw new Error("❌ No se encontró columna de día (ej: diaSemana)");
+            if (colHora === -1) throw new Error("❌ No se encontró columna de hora (ej: horaNotificacion)");
+            let inicio = 0;
             for (let i = 0; i < filas.length; i++) {
-                const f = filas[i];
-                if (f && f[col.diaSemana] && normalizarDia(f[col.diaSemana])) {
-                    inicioDatos = i;
-                    break;
-                }
+                if (filas[i]?.[colDia] && normalizarDia(filas[i][colDia])) { inicio = i; break; }
             }
-
-            let totalRegistros = 0;
-            for (let i = inicioDatos; i < filas.length; i++) {
+            let total = 0;
+            for (let i = inicio; i < filas.length; i++) {
                 const row = filas[i];
-                if (!row || row.length === 0) continue;
-                let diaRaw = col.diaSemana < row.length ? row[col.diaSemana] : null;
-                let horaRaw = col.horaNotificacion < row.length ? row[col.horaNotificacion] : null;
-
+                if (!row) continue;
+                let diaRaw = row[colDia];
+                let horaRaw = row[colHora];
                 if (diaRaw && typeof diaRaw === 'object' && diaRaw.t) diaRaw = diaRaw.t;
                 if (horaRaw && typeof horaRaw === 'object' && horaRaw.t) horaRaw = horaRaw.t;
-
                 const dia = normalizarDia(diaRaw);
                 if (!dia) continue;
                 const horaDec = horaADecimal(horaRaw);
                 if (horaDec === null) continue;
-
                 registrosPorDia[dia].push(horaDec);
-                totalRegistros++;
+                total++;
             }
-            
-            if (totalRegistros === 0) throw new Error("No hay registros válidos");
-            
-            let horaMinGlobal = 24;
-            let horaMaxGlobal = 0;
-            
-            for (let dia of daysOrder) {
-                if (registrosPorDia[dia].length > 0) {
-                    const minDia = Math.min(...registrosPorDia[dia]);
-                    const maxDia = Math.max(...registrosPorDia[dia]);
-                    horaMinGlobal = Math.min(horaMinGlobal, minDia);
-                    horaMaxGlobal = Math.max(horaMaxGlobal, maxDia);
-                }
-            }
-            
-            horaMinGlobal = Math.max(0, Math.floor(horaMinGlobal) - 1);
-            horaMaxGlobal = Math.min(24, Math.ceil(horaMaxGlobal) + 1);
-            
-            const resultado = {
-                rangoGlobal: { min: horaMinGlobal, max: horaMaxGlobal },
-                dias: {}
-            };
-            
+            if (total === 0) throw new Error("No se encontraron registros válidos.");
+            let horaMinGlobal = 24, horaMaxGlobal = 0;
+            const resultado = { dias: {} };
             for (let dia of daysOrder) {
                 const horas = registrosPorDia[dia];
-                if (horas.length > 0) {
-                    const horasUnicas = [...new Set(horas)];
-                    const periodos = generarPeriodos(horasUnicas);
-                    
-                    for (let periodo of periodos) {
-                        periodo.count = horas.filter(h => h >= periodo.min && h <= periodo.max).length;
-                    }
-                    
-                    resultado.dias[dia] = {
-                        periodos: periodos.filter(p => p.count > 0),
-                        total: horas.length,
-                        horas: horas
-                    };
+                if (horas.length) {
+                    const unicas = [...new Set(horas)];
+                    let periodos = generarPeriodos(unicas);
+                    periodos = periodos.map(p => ({ ...p, count: horas.filter(h => h >= p.min && h <= p.max).length }));
+                    resultado.dias[dia] = { periodos: periodos.filter(p => p.count > 0), total: horas.length, horas };
+                    const minDia = Math.min(...horas), maxDia = Math.max(...horas);
+                    horaMinGlobal = Math.min(horaMinGlobal, minDia);
+                    horaMaxGlobal = Math.max(horaMaxGlobal, maxDia);
                 } else {
-                    resultado.dias[dia] = {
-                        periodos: [],
-                        total: 0,
-                        horas: []
-                    };
+                    resultado.dias[dia] = { periodos: [], total: 0, horas: [] };
                 }
             }
-            
-            resultado.horaMinGlobal = horaMinGlobal;
-            resultado.horaMaxGlobal = horaMaxGlobal;
-            
+            resultado.horaMinGlobal = Math.max(0, Math.floor(horaMinGlobal) - 0.5);
+            resultado.horaMaxGlobal = Math.min(24, Math.ceil(horaMaxGlobal) + 0.5);
             return resultado;
         }
 
@@ -985,138 +842,83 @@
 
         function renderVisualizacion() {
             const container = document.getElementById("visualizationRoot");
-            
             if (!datosProcesados.dias || Object.keys(datosProcesados.dias).length === 0) {
-                container.innerHTML = `<div class="no-data-msg">🔍 No se encontraron notificaciones válidas</div>`;
+                container.innerHTML = `<div class="no-data-msg">🔍 No hay datos cargados.</div>`;
                 return;
             }
-            
-            let maxFrecuenciaPeriodo = 0;
-            const diasConDatos = [];
-            
-            for (let dia of daysOrder) {
-                if (datosProcesados.dias[dia] && datosProcesados.dias[dia].total > 0) {
-                    diasConDatos.push(dia);
-                    for (let periodo of datosProcesados.dias[dia].periodos) {
-                        maxFrecuenciaPeriodo = Math.max(maxFrecuenciaPeriodo, periodo.count);
-                    }
-                }
+            const diasConDatos = daysOrder.filter(d => datosProcesados.dias[d]?.total > 0);
+            if (diasConDatos.length === 0) {
+                container.innerHTML = `<div class="no-data-msg">📭 No hay notificaciones en ningún día.</div>`;
+                return;
             }
-            
-            const horaMin = datosProcesados.horaMinGlobal;
-            const horaMax = datosProcesados.horaMaxGlobal;
+            let maxFrecuencia = 0;
+            for (let dia of diasConDatos) {
+                for (let p of datosProcesados.dias[dia].periodos) maxFrecuencia = Math.max(maxFrecuencia, p.count);
+            }
+            const horaMin = datosProcesados.horaMinGlobal, horaMax = datosProcesados.horaMaxGlobal;
             const rangoHoras = horaMax - horaMin;
-            const alturaTotal = Math.min(window.innerHeight - 160, 650);
-            
-            const currentDay = getCurrentDay();
-            const currentHour = getCurrentHourDecimal();
-            
+            const alturaTotal = Math.min(window.innerHeight - 150, 620, document.documentElement.clientHeight - 150);
             const timeMarkers = [];
             for (let h = Math.ceil(horaMin); h <= Math.floor(horaMax); h += 2) {
                 const posY = ((h - horaMin) / rangoHoras) * alturaTotal;
-                timeMarkers.push({ hora: h, posY: posY });
+                timeMarkers.push({ hora: h, posY });
             }
-            
-            let html = `
-                <div class="scroll-container">
-                    <div class="timeline-container" style="height: ${alturaTotal + 35}px;">
-                        <div class="time-scale">
-                            <div class="time-markers" style="height: ${alturaTotal}px;">
-            `;
-            
-            for (let marker of timeMarkers) {
-                html += `
-                    <div class="time-marker" style="top: ${marker.posY}px;">
-                        ${formatearHora(marker.hora)}
-                        <div class="time-marker-line" style="top: 50%;"></div>
-                    </div>
-                `;
+            const currentDay = getCurrentDay();
+            const currentHour = getCurrentHourDecimal();
+            let html = `<div class="scroll-container"><div class="timeline-container" style="height: ${alturaTotal + 35}px;">
+                        <div class="time-scale"><div class="time-markers" style="height: ${alturaTotal}px;">`;
+            for (let m of timeMarkers) {
+                html += `<div class="time-marker" style="top: ${m.posY}px;">${formatearHora(m.hora)}<div class="time-marker-line" style="top: 50%;"></div></div>`;
             }
-            
-            html += `
-                            </div>
-                        </div>
-                        
-                        <div style="flex: 1;">
-                            <div class="days-header">
-            `;
-            
-            for (let dia of diasConDatos) {
-                html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
-            }
-            
-            html += `
-                            </div>
-                            <div class="days-grid" style="height: ${alturaTotal}px;">
-            `;
-            
+            html += `</div></div><div style="flex:1;"><div class="days-header">`;
+            for (let dia of diasConDatos) html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
+            html += `</div><div class="days-grid" style="height: ${alturaTotal}px;">`;
             for (let idx = 0; idx < diasConDatos.length; idx++) {
                 const dia = diasConDatos[idx];
                 const data = datosProcesados.dias[dia];
-                const isCurrentDay = (dia === currentDay);
-                
+                const isCurrent = (dia === currentDay);
                 html += `<div class="day-column" style="height: ${alturaTotal}px;">`;
-                
                 for (let periodo of data.periodos) {
                     const topPercent = ((periodo.min - horaMin) / rangoHoras) * 100;
                     const bottomPercent = ((periodo.max - horaMin) / rangoHoras) * 100;
                     const heightPercent = bottomPercent - topPercent;
-                    
-                    const intensityClass = getIntensityClass(periodo.count, maxFrecuenciaPeriodo);
-                    const tooltip = `${periodo.label} · ${periodo.count} notificaciones`;
-                    
-                    html += `
-                        <div class="period-block ${intensityClass}" 
-                             style="top: ${topPercent}%; height: ${heightPercent}%;"
-                             data-tooltip="${tooltip.replace(/"/g, '&quot;')}">
-                            <div class="period-label">${periodo.label}</div>
-                            <div class="period-count">${periodo.count}</div>
-                        </div>
-                    `;
+                    const intensity = getIntensityClass(periodo.count, maxFrecuencia);
+                    const tooltip = `${periodo.label} · ${periodo.count} notif.`;
+                    html += `<div class="period-block ${intensity}" style="top: ${topPercent}%; height: ${heightPercent}%;" data-tooltip="${tooltip.replace(/"/g, '&quot;')}">
+                                <div class="period-label">${periodo.label}</div>
+                                <div class="period-count">${periodo.count}</div>
+                             </div>`;
                 }
-                
-                if (isCurrentDay && currentHour >= horaMin && currentHour <= horaMax) {
+                if (isCurrent && currentHour >= horaMin && currentHour <= horaMax) {
                     const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
-                    const tiempoRestante = calcularTiempoRestante();
-                    html += `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRestante}"></div>`;
+                    const tiempoRest = calcularTiempoRestante();
+                    html += `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRest}"></div>`;
                 }
-                
                 html += `</div>`;
             }
-            
-            html += `
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
+            html += `</div></div></div></div>`;
             container.innerHTML = html;
             actualizarUIAlarmas();
             iniciarActualizacionTiempo();
         }
-        
+
         function actualizarUIAlarmas() {
-            const statusSpan = document.getElementById('alarmStatus');
-            if (!statusSpan) return;
-            
+            const span = document.getElementById('alarmStatus');
+            if (!span) return;
             if (alarmEnabled) {
-                statusSpan.textContent = `🔔 Alarmas activas (${alarmMinutesBefore} min antes)`;
-                statusSpan.classList.add('active');
+                span.textContent = `🔔 Alarmas activas (${alarmMinutesBefore} min antes)`;
+                span.classList.add('active');
             } else {
-                statusSpan.textContent = '⚪ Alarmas desactivadas';
-                statusSpan.classList.remove('active');
+                span.textContent = '⚪ Alarmas desactivadas';
+                span.classList.remove('active');
             }
         }
 
         function ocultarBotonUpload() {
-            const uploadArea = document.getElementById('uploadArea');
-            if (uploadArea) uploadArea.classList.add('hidden');
-            
+            document.getElementById('uploadArea')?.classList.add('hidden');
             const alarmPanel = document.getElementById('alarmPanel');
             if (alarmPanel) alarmPanel.style.display = 'flex';
-            
-            solicitarPermisoNotificaciones();
+            if (Notification.permission === 'default') Notification.requestPermission();
         }
 
         function mostrarError(msg) {
@@ -1124,60 +926,32 @@
             if (errDiv) {
                 errDiv.style.display = "block";
                 errDiv.innerHTML = `<div class="error-message">⚠️ ${msg}</div>`;
-                setTimeout(() => {
-                    errDiv.style.display = "none";
-                }, 5000);
+                setTimeout(() => errDiv.style.display = "none", 5000);
             }
         }
 
-        function limpiarError() {
-            const e = document.getElementById("errorContainer");
-            if (e) e.style.display = "none";
-        }
-
-        function configurarEventosAlarmas() {
-            const alarmToggle = document.getElementById('alarmToggle');
-            const alarmMinutesInput = document.getElementById('alarmMinutes');
-            
-            if (alarmToggle) {
-                alarmToggle.addEventListener('change', (e) => {
-                    alarmEnabled = e.target.checked;
-                    if (alarmEnabled) {
-                        iniciarSistemaAlarmas();
-                        setTimeout(() => {
-                            reproducirBeep();
-                        }, 100);
-                    } else {
-                        detenerSistemaAlarmas();
-                        alarmasDisparadas.clear();
-                    }
-                    actualizarUIAlarmas();
-                });
-            }
-            
-            if (alarmMinutesInput) {
-                alarmMinutesInput.addEventListener('change', (e) => {
-                    let val = parseInt(e.target.value);
-                    if (isNaN(val)) val = 10;
-                    val = Math.min(60, Math.max(1, val));
-                    alarmMinutesBefore = val;
-                    e.target.value = val;
-                    
-                    if (alarmEnabled) {
-                        alarmasDisparadas.clear();
-                        verificarAlarmas();
-                    }
-                    actualizarUIAlarmas();
-                });
-            }
+        function configurarAlarmasUI() {
+            const toggle = document.getElementById('alarmToggle');
+            const minutesInput = document.getElementById('alarmMinutes');
+            if (toggle) toggle.addEventListener('change', (e) => {
+                alarmEnabled = e.target.checked;
+                alarmEnabled ? iniciarSistemaAlarmas() : detenerSistemaAlarmas();
+                if (alarmEnabled) alarmasDisparadas.clear();
+                actualizarUIAlarmas();
+            });
+            if (minutesInput) minutesInput.addEventListener('change', (e) => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val)) val = 10;
+                alarmMinutesBefore = Math.min(60, Math.max(1, val));
+                e.target.value = alarmMinutesBefore;
+                if (alarmEnabled) { alarmasDisparadas.clear(); verificarAlarmas(); }
+                actualizarUIAlarmas();
+            });
         }
 
         document.getElementById("excelInput").addEventListener("change", function (e) {
             const file = e.target.files[0];
             if (!file) return;
-            limpiarError();
-            ocultarBotonUpload();
-            
             const reader = new FileReader();
             reader.onload = function (evt) {
                 try {
@@ -1185,57 +959,34 @@
                     const wb = XLSX.read(data, { type: 'array' });
                     datosProcesados = procesarExcel(wb);
                     renderVisualizacion();
-                    configurarEventosAlarmas();
+                    configurarAlarmasUI();
+                    ocultarBotonUpload();
                 } catch (err) {
                     mostrarError(err.message);
-                    const uploadArea = document.getElementById('uploadArea');
-                    if (uploadArea) uploadArea.classList.remove('hidden');
-                    const alarmPanel = document.getElementById('alarmPanel');
-                    if (alarmPanel) alarmPanel.style.display = 'none';
+                    document.getElementById('uploadArea')?.classList.remove('hidden');
+                    document.getElementById('alarmPanel').style.display = 'none';
                 }
             };
-            reader.onerror = () => mostrarError("No se pudo leer el archivo");
+            reader.onerror = () => mostrarError("Error al leer el archivo");
             reader.readAsArrayBuffer(file);
         });
 
         function checkOrientation() {
             const warning = document.getElementById('orientationWarning');
-            const mainContent = document.getElementById('mainContent');
-            
+            const main = document.getElementById('mainContent');
             if (window.matchMedia("(orientation: landscape)").matches) {
                 warning.classList.remove('show');
-                mainContent.classList.add('visible');
-                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0) {
-                    setTimeout(() => renderVisualizacion(), 100);
-                }
+                main.classList.add('visible');
+                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length) setTimeout(() => renderVisualizacion(), 30);
             } else {
                 warning.classList.add('show');
-                mainContent.classList.remove('visible');
+                main.classList.remove('visible');
             }
         }
-        
         window.addEventListener('resize', checkOrientation);
         window.addEventListener('load', checkOrientation);
-        
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && alarmEnabled) {
-                verificarAlarmas();
-            }
-        });
-        
-        window.addEventListener('resize', () => {
-            if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0 && window.matchMedia("(orientation: landscape)").matches) {
-                setTimeout(() => renderVisualizacion(), 100);
-            }
-        });
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('✅ Service Worker registrado:', reg))
-                    .catch(err => console.log('❌ Error Service Worker:', err));
-            });
-        }
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && alarmEnabled) verificarAlarmas(); });
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(e=>console.log("SW no registrado", e));
     </script>
 </body>
 
