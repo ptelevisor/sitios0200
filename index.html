@@ -665,20 +665,34 @@
             
             if (!dataDia || dataDia.periodos.length === 0) return "00:00:00";
             
-            // Buscar la próxima notificación (hora de inicio de periodo)
-            let proximaHora = null;
+            let horaDestino = null;
+            let esDentroDeRango = false;
+            
+            // Buscar si está dentro de algún periodo
             for (let periodo of dataDia.periodos) {
-                if (periodo.min > horaActualDecimal) {
-                    proximaHora = periodo.min;
+                if (horaActualDecimal >= periodo.min && horaActualDecimal <= periodo.max) {
+                    // Está dentro del rango -> mostrar tiempo que falta para que TERMINE
+                    horaDestino = periodo.max;
+                    esDentroDeRango = true;
                     break;
                 }
             }
             
-            if (proximaHora === null) return "00:00:00";
+            // Si no está dentro de ningún periodo, buscar el próximo
+            if (!esDentroDeRango) {
+                for (let periodo of dataDia.periodos) {
+                    if (periodo.min > horaActualDecimal) {
+                        horaDestino = periodo.min;
+                        break;
+                    }
+                }
+            }
+            
+            if (horaDestino === null) return "00:00:00";
             
             // Calcular diferencia
             const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora.getMilliseconds();
-            const destinoEnMs = Math.floor(proximaHora) * 3600000 + (proximaHora % 1) * 60 * 60000;
+            const destinoEnMs = Math.floor(horaDestino) * 3600000 + (horaDestino % 1) * 60 * 60000;
             
             let diffMs = destinoEnMs - ahoraEnMs;
             if (diffMs < 0) diffMs = 0;
