@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#111418">
+    <meta name="theme-color" content="#f5f5f5">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Horario Notif">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='240' fill='%23111418' stroke='%23ef4444' stroke-width='16'/%3E%3Ccircle cx='256' cy='256' r='200' fill='%23ef4444'/%3E%3Crect x='246' y='120' width='20' height='136' rx='10' fill='%23111418'/%3E%3Crect x='246' y='280' width='20' height='40' rx='10' fill='%23111418'/%3E%3Ccircle cx='256' cy='340' r='16' fill='%23111418'/%3E%3Cpath d='M180 180 L220 220' stroke='%23111418' stroke-width='16' stroke-linecap='round'/%3E%3Cpath d='M332 180 L292 220' stroke='%23111418' stroke-width='16' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='240' fill='%23f5f5f5' stroke='%23ef4444' stroke-width='16'/%3E%3Ccircle cx='256' cy='256' r='200' fill='%23ef4444'/%3E%3Crect x='246' y='120' width='20' height='136' rx='10' fill='%23f5f5f5'/%3E%3Crect x='246' y='280' width='20' height='40' rx='10' fill='%23f5f5f5'/%3E%3Ccircle cx='256' cy='340' r='16' fill='%23f5f5f5'/%3E%3Cpath d='M180 180 L220 220' stroke='%23f5f5f5' stroke-width='16' stroke-linecap='round'/%3E%3Cpath d='M332 180 L292 220' stroke='%23f5f5f5' stroke-width='16' stroke-linecap='round'/%3E%3C/svg%3E">
     <title>Horario de Notificaciones · Vista de Bloques</title>
     <style>
         * {
@@ -18,7 +18,7 @@
         }
 
         body {
-            background: #0a0c10;
+            background: #e5e7eb;
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -31,7 +31,7 @@
             width: 100%;
             max-width: 100%;
             margin: 0 auto;
-            background: #111418;
+            background: #f5f5f5;
             border-radius: 0;
             box-shadow: none;
             overflow: hidden;
@@ -48,7 +48,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: #0a0c10;
+            background: #f5f5f5;
             z-index: 1000;
             flex-direction: column;
             align-items: center;
@@ -67,14 +67,14 @@
         }
 
         .orientation-warning .warning-text {
-            color: #facc15;
+            color: #ef4444;
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
 
         .orientation-warning .warning-subtext {
-            color: #9ca3af;
+            color: #6b7280;
             font-size: 0.9rem;
         }
 
@@ -90,11 +90,11 @@
         }
 
         .upload-area {
-            background: #0f1318;
+            background: #ffffff;
             padding: 0.8rem;
             display: flex;
             justify-content: center;
-            border-bottom: 1px solid #2a2f38;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .file-label {
@@ -130,9 +130,9 @@
         }
 
         .alarm-panel {
-            background: #0f1318;
+            background: #ffffff;
             padding: 0.8rem 1rem;
-            border-bottom: 1px solid #2a2f38;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -144,13 +144,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: #1a212c;
+            background: #f3f4f6;
             padding: 5px 12px;
             border-radius: 30px;
         }
 
         .alarm-toggle label {
-            color: #eef2ff;
+            color: #1f2937;
             font-size: 0.8rem;
             cursor: pointer;
         }
@@ -159,7 +159,7 @@
             width: 40px;
             height: 20px;
             appearance: none;
-            background: #2a2f38;
+            background: #d1d5db;
             border-radius: 20px;
             position: relative;
             cursor: pointer;
@@ -190,20 +190,20 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #1a212c;
+            background: #f3f4f6;
             padding: 5px 12px;
             border-radius: 30px;
         }
 
         .alarm-minutes label {
-            color: #eef2ff;
+            color: #1f2937;
             font-size: 0.8rem;
         }
 
         .alarm-minutes input {
-            background: #2a2f38;
-            border: none;
-            color: #facc15;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #ef4444;
             padding: 4px 8px;
             border-radius: 20px;
             width: 60px;
@@ -215,8 +215,8 @@
             font-size: 0.7rem;
             padding: 4px 10px;
             border-radius: 20px;
-            background: #1a212c;
-            color: #9ca3af;
+            background: #f3f4f6;
+            color: #6b7280;
         }
 
         .alarm-status.active {
@@ -253,8 +253,8 @@
             top: 35px;
             bottom: 0;
             width: 55px;
-            background: #0f1318;
-            border-right: 1px solid #2a2f38;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
             z-index: 5;
         }
 
@@ -279,13 +279,13 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: #2a2f38;
+            background: #e5e7eb;
             opacity: 0.5;
         }
 
         .days-header {
             display: flex;
-            background: #1a212c;
+            background: #f3f4f6;
             border-bottom: 2px solid #ef4444;
             border-radius: 8px 8px 0 0;
         }
@@ -295,9 +295,9 @@
             text-align: center;
             padding: 8px 4px;
             font-weight: 700;
-            color: #facc15;
+            color: #ef4444;
             font-size: 0.8rem;
-            border-right: 1px solid #2a2f38;
+            border-right: 1px solid #e5e7eb;
             text-transform: capitalize;
         }
 
@@ -308,7 +308,7 @@
         .days-grid {
             display: flex;
             position: relative;
-            background: #0a0c10;
+            background: #f9fafb;
             height: calc(100vh - 140px);
             min-height: 400px;
             max-height: 800px;
@@ -317,8 +317,8 @@
         .day-column {
             flex: 1;
             position: relative;
-            border-right: 1px solid #2a2f38;
-            background: #0f1318;
+            border-right: 1px solid #e5e7eb;
+            background: #ffffff;
         }
 
         .day-column:last-child {
@@ -337,52 +337,48 @@
             justify-content: center;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .period-block:hover {
             transform: scaleX(1.02);
-            filter: brightness(1.1);
+            filter: brightness(1.05);
             z-index: 10;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
         .period-label {
-            position: absolute;
-            top: -16px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.5rem;
-            font-weight: 600;
-            color: #facc15;
-            background: rgba(0, 0, 0, 0.8);
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: #1f2937;
+            background: rgba(255, 255, 255, 0.9);
             padding: 2px 5px;
             border-radius: 8px;
             white-space: nowrap;
-            z-index: 15;
             pointer-events: none;
-        }
-
-        .period-count {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: white;
+            text-align: center;
         }
 
         .period-block.intensity-1 { background: #fee2e2; }
-        .period-block.intensity-1 .period-count { color: #1f2937; }
         .period-block.intensity-2 { background: #fecaca; }
-        .period-block.intensity-2 .period-count { color: #1f2937; }
         .period-block.intensity-3 { background: #fca5a5; }
-        .period-block.intensity-3 .period-count { color: #1f2937; }
         .period-block.intensity-4 { background: #f87171; }
-        .period-block.intensity-4 .period-count { color: white; }
         .period-block.intensity-5 { background: #ef4444; }
         .period-block.intensity-6 { background: #dc2626; }
         .period-block.intensity-7 { background: #b91c1c; }
         .period-block.intensity-8 { background: #991b1b; }
         .period-block.intensity-9 { background: #7f1d1d; }
         .period-block.intensity-10 { background: #450a0a; }
+
+        .period-block.intensity-5 .period-label,
+        .period-block.intensity-6 .period-label,
+        .period-block.intensity-7 .period-label,
+        .period-block.intensity-8 .period-label,
+        .period-block.intensity-9 .period-label,
+        .period-block.intensity-10 .period-label {
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+        }
 
         .current-time-line {
             position: absolute;
@@ -415,9 +411,9 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            background: #000000dd;
+            background: #1f2937;
             backdrop-filter: blur(8px);
-            color: #fff5e6;
+            color: #f9fafb;
             font-size: 0.65rem;
             font-weight: 500;
             padding: 5px 10px;
@@ -433,16 +429,17 @@
         .no-data-msg {
             text-align: center;
             padding: 2rem 1rem;
-            color: #9ca3af;
+            color: #6b7280;
             font-style: italic;
-            background: #0f1318;
+            background: #ffffff;
             border-radius: 16px;
             margin: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .error-message {
-            background: #7f1d1d;
-            color: #fee2e2;
+            background: #fee2e2;
+            color: #991b1b;
             padding: 10px 16px;
             border-radius: 12px;
             margin: 10px 12px;
@@ -468,10 +465,6 @@
             }
             .period-label {
                 font-size: 0.45rem;
-                top: -14px;
-            }
-            .period-count {
-                font-size: 0.65rem;
             }
             .day-header-cell {
                 padding: 5px 2px;
@@ -521,7 +514,7 @@
             <div class="alarm-minutes">
                 <label>⏰ Anticipación</label>
                 <input type="number" id="alarmMinutes" min="1" max="60" value="10">
-                <span style="color:#9ca3af;">min</span>
+                <span style="color:#6b7280;">min</span>
             </div>
             <div id="alarmStatus" class="alarm-status">⚪ Sin alarmas activas</div>
         </div>
@@ -886,7 +879,6 @@
                     const tooltip = `${periodo.label} · ${periodo.count} notif.`;
                     html += `<div class="period-block ${intensity}" style="top: ${topPercent}%; height: ${heightPercent}%;" data-tooltip="${tooltip.replace(/"/g, '&quot;')}">
                                 <div class="period-label">${periodo.label}</div>
-                                <div class="period-count">${periodo.count}</div>
                              </div>`;
                 }
                 if (isCurrent && currentHour >= horaMin && currentHour <= horaMax) {
