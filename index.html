@@ -684,7 +684,6 @@
             return now.getHours() + (now.getMinutes() / 60) + (now.getSeconds() / 3600);
         }
 
-        // FUNCIÓN MODIFICADA: NUNCA muestra "AHORA", siempre muestra tiempo en HH:MM:SS
         function calcularTiempoRestante() {
             if (!datosProcesados.dias) return "00:00:00";
 
@@ -698,9 +697,8 @@
             }
 
             let horaDestino = null;
-            let tipoDestino = "fin"; // "fin" de bloque o "inicio" de bloque
+            let tipoDestino = "fin";
 
-            // Buscar si está dentro de algún bloque (entonces cuenta hasta el fin del bloque)
             for (let periodo of dataDia.periodos) {
                 if (horaActualDecimal >= periodo.min && horaActualDecimal <= periodo.max) {
                     horaDestino = periodo.max;
@@ -709,7 +707,6 @@
                 }
             }
 
-            // Si no está dentro de ningún bloque, buscar el próximo inicio
             if (horaDestino === null) {
                 let menorInicioFuturo = null;
                 for (let periodo of dataDia.periodos) {
@@ -725,7 +722,6 @@
                 }
             }
 
-            // Si no hay ningún bloque hoy, buscar el primer bloque de mañana
             if (horaDestino === null) {
                 const tomorrow = new Date(ahora);
                 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -740,7 +736,6 @@
                         }
                     }
                     if (primerInicio !== null) {
-                        // Calcular horas hasta mañana a esa hora
                         const hoyFinDia = 24 - horaActualDecimal;
                         const mananaInicio = primerInicio;
                         const horasTotales = hoyFinDia + mananaInicio;
@@ -754,12 +749,10 @@
                 return "00:00:00";
             }
 
-            // Calcular diferencia en milisegundos
             const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora.getMilliseconds();
             const destinoEnMs = Math.floor(horaDestino) * 3600000 + (horaDestino % 1) * 60 * 60000;
             let diffMs = destinoEnMs - ahoraEnMs;
 
-            // Si la diferencia es negativa (caso borde), mostrar 00:00:00
             if (diffMs < 0) diffMs = 0;
 
             const totalSegundos = Math.floor(diffMs / 1000);
