@@ -213,6 +213,13 @@
             font-weight: 600;
         }
 
+        .alarm-status-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .alarm-status {
             font-size: 0.7rem;
             padding: 4px 10px;
@@ -224,6 +231,17 @@
         .alarm-status.active {
             background: #ef4444;
             color: white;
+        }
+
+        .version-timestamp {
+            font-size: 0.6rem;
+            color: #9ca3af;
+            background: #f3f4f6;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .timeline-view {
@@ -532,7 +550,8 @@
             }
         }
     </style>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js">
+    </script>
 </head>
 
 <body>
@@ -560,7 +579,10 @@
                 <input type="number" id="alarmMinutes" min="1" max="60" value="10">
                 <span style="color:#6b7280;">min</span>
             </div>
-            <div id="alarmStatus" class="alarm-status">⚪ Sin alarmas activas</div>
+            <div class="alarm-status-container">
+                <span class="version-timestamp" id="versionTimestamp">v2.1 · 2026-06-17 16:00</span>
+                <span id="alarmStatus" class="alarm-status">⚪ Sin alarmas activas</span>
+            </div>
         </div>
 
         <div id="errorContainer" style="display: none;"></div>
@@ -575,6 +597,20 @@
     </div>
 
     <script>
+        // ============================================
+        // VERSIÓN DEL SISTEMA
+        // ============================================
+        const VERSION = '2.1';
+        const BUILD_DATE = '2026-06-17 16:00';
+
+        // Mostrar versión en la UI
+        document.addEventListener('DOMContentLoaded', function() {
+            const versionEl = document.getElementById('versionTimestamp');
+            if (versionEl) {
+                versionEl.textContent = `v${VERSION} · ${BUILD_DATE}`;
+            }
+        });
+
         let datosProcesados = {};
         let alarmInterval = null;
         let alarmasDisparadas = new Set();
@@ -630,9 +666,17 @@
             return `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
         }
 
+        // ============================================
+        // FUNCIÓN MODIFICADA: generarPeriodos()
+        // OPCIÓN 3: FUSIÓN DE BLOQUES SOLAPADOS + FILTRO
+        // ============================================
         function generarPeriodos(horasUnicas) {
             if (horasUnicas.length === 0) return [];
+
+            // Ordenar horas
             horasUnicas.sort((a, b) => a - b);
+
+            // 1. Agrupar horas cercanas (separación <= 2 horas)
             let grupos = [];
             let grupoActual = [horasUnicas[0]];
             for (let i = 1; i < horasUnicas.length; i++) {
@@ -644,6 +688,8 @@
                 }
             }
             grupos.push([...grupoActual]);
+
+            // 2. Dividir grupos que son muy largos (> 4 horas)
             let gruposDivididos = [];
             for (let grupo of grupos) {
                 if (grupo.length === 0) continue;
@@ -664,13 +710,46 @@
                     gruposDivididos.push([...grupo]);
                 }
             }
-            return gruposDivididos.map(g => ({
-                min: Math.min(...g),
-                max: Math.max(...g),
-                label: `${formatearHora(Math.min(...g))} - ${formatearHora(Math.max(...g))}`,
-                horas: g,
-                count: 0
-            }));
+
+            // 3. Fusionar bloques que se SOLAPAN
+            let periodosFinales = [];
+            for (let periodo of gruposDivididos) {
+                const min = Math.min(...periodo);
+                const max = Math.max(...periodo);
+
+                if (periodosFinales.length > 0) {
+                    const ultimo = periodosFinales[periodosFinales.length - 1];
+                    if (min <= ultimo.max) {
+                        ultimo.min = Math.min(ultimo.min, min);
+                        ultimo.max = Math.max(ultimo.max, max);
+                        ultimo.horas = [...new Set([...ultimo.horas, ...periodo])];
+                        ultimo.label = `${formatearHora(ultimo.min)} - ${formatearHora(ultimo.max)}`;
+                        continue;
+                    }
+                }
+
+                periodosFinales.push({
+                    min: min,
+                    max: max,
+                    label: `${formatearHora(min)} - ${formatearHora(max)}`,
+                    horas: periodo,
+                    count: 0
+                });
+            }
+
+            // 4. 🔥 NUEVO FILTRO: Eliminar bloques sospechosos
+            // - Bloques de menos de 10 minutos (0.166 horas)
+            // - Bloques que son un solo punto (min === max)
+            periodosFinales = periodosFinales.filter(p => {
+                const duracion = p.max - p.min;
+                // Eliminar bloques de menos de 10 minutos
+                if (duracion < 0.166) return false;
+                // Eliminar bloques que son un solo punto
+                if (p.min === p.max) return false;
+                return true;
+            });
+
+            return periodosFinales;
         }
 
         function getCurrentDay() {
@@ -693,69 +772,67 @@
             const dataDia = datosProcesados.dias[diaActual];
 
             if (!dataDia || dataDia.periodos.length === 0) {
-                return "00:00:00";
+                return calcularTiempoHastaManana(ahora, horaActualDecimal);
             }
 
-            let horaDestino = null;
-            let tipoDestino = "fin";
-
+            // 1. Buscar si estamos DENTRO de un bloque
             for (let periodo of dataDia.periodos) {
                 if (horaActualDecimal >= periodo.min && horaActualDecimal <= periodo.max) {
-                    horaDestino = periodo.max;
-                    tipoDestino = "fin";
-                    break;
+                    return calcularDiferencia(ahora, periodo.max);
                 }
             }
 
-            if (horaDestino === null) {
-                let menorInicioFuturo = null;
-                for (let periodo of dataDia.periodos) {
-                    if (periodo.min > horaActualDecimal) {
-                        if (menorInicioFuturo === null || periodo.min < menorInicioFuturo) {
-                            menorInicioFuturo = periodo.min;
-                        }
+            // 2. Buscar el PRÓXIMO bloque del día
+            let proximoInicio = null;
+            for (let periodo of dataDia.periodos) {
+                if (periodo.min > horaActualDecimal) {
+                    if (proximoInicio === null || periodo.min < proximoInicio) {
+                        proximoInicio = periodo.min;
                     }
-                }
-                if (menorInicioFuturo !== null) {
-                    horaDestino = menorInicioFuturo;
-                    tipoDestino = "inicio";
                 }
             }
 
-            if (horaDestino === null) {
-                const tomorrow = new Date(ahora);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const daysSpanish = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-                const diaManana = daysSpanish[tomorrow.getDay()];
-                const dataManana = datosProcesados.dias[diaManana];
-                if (dataManana && dataManana.periodos.length > 0) {
-                    let primerInicio = null;
-                    for (let periodo of dataManana.periodos) {
-                        if (primerInicio === null || periodo.min < primerInicio) {
-                            primerInicio = periodo.min;
-                        }
-                    }
-                    if (primerInicio !== null) {
-                        const hoyFinDia = 24 - horaActualDecimal;
-                        const mananaInicio = primerInicio;
-                        const horasTotales = hoyFinDia + mananaInicio;
-                        const totalSegundos = Math.floor(horasTotales * 3600);
-                        const horas = Math.floor(totalSegundos / 3600);
-                        const minutos = Math.floor((totalSegundos % 3600) / 60);
-                        const segundos = totalSegundos % 60;
-                        return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
-                    }
-                }
-                return "00:00:00";
+            if (proximoInicio !== null) {
+                return calcularDiferencia(ahora, proximoInicio);
             }
 
-            const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora.getMilliseconds();
+            // 3. No hay más bloques hoy, buscar mañana
+            return calcularTiempoHastaManana(ahora, horaActualDecimal);
+        }
+
+        function calcularDiferencia(ahora, horaDestino) {
+            const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora
+                .getMilliseconds();
             const destinoEnMs = Math.floor(horaDestino) * 3600000 + (horaDestino % 1) * 60 * 60000;
             let diffMs = destinoEnMs - ahoraEnMs;
 
             if (diffMs < 0) diffMs = 0;
 
             const totalSegundos = Math.floor(diffMs / 1000);
+            const horas = Math.floor(totalSegundos / 3600);
+            const minutos = Math.floor((totalSegundos % 3600) / 60);
+            const segundos = totalSegundos % 60;
+
+            return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+        }
+
+        function calcularTiempoHastaManana(ahora, horaActual) {
+            const tomorrow = new Date(ahora);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const daysSpanish = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+            const diaManana = daysSpanish[tomorrow.getDay()];
+            const dataManana = datosProcesados.dias[diaManana];
+
+            if (!dataManana || dataManana.periodos.length === 0) {
+                return "00:00:00";
+            }
+
+            let primerInicio = Math.min(...dataManana.periodos.map(p => p.min));
+
+            const horasHastaMedianoche = 24 - horaActual;
+            const horasTotales = horasHastaMedianoche + primerInicio;
+
+            const totalSegundos = Math.floor(horasTotales * 3600);
             const horas = Math.floor(totalSegundos / 3600);
             const minutos = Math.floor((totalSegundos % 3600) / 60);
             const segundos = totalSegundos % 60;
@@ -806,7 +883,8 @@
                     reproducirBeep();
                     alarmasDisparadas.add(alarmKey);
                     if (Notification.permission === 'granted') {
-                        new Notification(`⏰ ${periodo.label}`, { body: `Comienza en ${alarmMinutesBefore} minutos`, silent: true });
+                        new Notification(`⏰ ${periodo.label}`, { body: `Comienza en ${alarmMinutesBefore} minutos`,
+                            silent: true });
                     }
                     resaltarPeriodoEnVivo(diaActual, periodo.label);
                 }
@@ -848,14 +926,16 @@
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const filas = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
             if (!filas?.length) throw new Error("Archivo sin datos.");
-            let colDia = -1, colHora = -1;
+            let colDia = -1,
+                colHora = -1;
             for (let r = 0; r < Math.min(10, filas.length); r++) {
                 const row = filas[r];
                 if (!row) continue;
                 for (let c = 0; c < row.length; c++) {
                     const val = row[c]?.toString().toLowerCase().trim() || "";
                     if ((val === "diasemana" || val === "dia semana" || val === "dia") && colDia === -1) colDia = c;
-                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && colHora === -1) colHora = c;
+                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && colHora === -1)
+                        colHora = c;
                 }
                 if (colDia !== -1 && colHora !== -1) break;
             }
@@ -893,7 +973,8 @@
                 total++;
             }
             if (total === 0) throw new Error("No se encontraron registros válidos.");
-            let horaMinGlobal = 24, horaMaxGlobal = 0;
+            let horaMinGlobal = 24,
+                horaMaxGlobal = 0;
             const resultado = { dias: {} };
             for (let dia of daysOrder) {
                 const horas = registrosPorDia[dia];
@@ -902,7 +983,8 @@
                     let periodos = generarPeriodos(unicas);
                     periodos = periodos.map(p => ({ ...p, count: horas.filter(h => h >= p.min && h <= p.max).length }));
                     resultado.dias[dia] = { periodos: periodos.filter(p => p.count > 0), total: horas.length, horas };
-                    const minDia = Math.min(...horas), maxDia = Math.max(...horas);
+                    const minDia = Math.min(...horas),
+                        maxDia = Math.max(...horas);
                     horaMinGlobal = Math.min(horaMinGlobal, minDia);
                     horaMaxGlobal = Math.max(horaMaxGlobal, maxDia);
                 } else {
@@ -935,7 +1017,8 @@
             for (let dia of diasConDatos) {
                 for (let p of datosProcesados.dias[dia].periodos) maxFrecuencia = Math.max(maxFrecuencia, p.count);
             }
-            const horaMin = datosProcesados.horaMinGlobal, horaMax = datosProcesados.horaMaxGlobal;
+            const horaMin = datosProcesados.horaMinGlobal,
+                horaMax = datosProcesados.horaMaxGlobal;
             const rangoHoras = horaMax - horaMin;
             const alturaTotal = Math.min(window.innerHeight - 150, 620, document.documentElement.clientHeight - 150);
             const timeMarkers = [];
@@ -948,10 +1031,12 @@
             let html = `<div class="scroll-container"><div class="timeline-container" style="height: ${alturaTotal + 35}px;">
                         <div class="time-scale"><div class="time-markers" style="height: ${alturaTotal}px;">`;
             for (let m of timeMarkers) {
-                html += `<div class="time-marker" style="top: ${m.posY}px;">${formatearHora(m.hora)}<div class="time-marker-line" style="top: 50%;"></div></div>`;
+                html +=
+                    `<div class="time-marker" style="top: ${m.posY}px;">${formatearHora(m.hora)}<div class="time-marker-line" style="top: 50%;"></div></div>`;
             }
             html += `</div></div><div style="flex:1;"><div class="days-header">`;
-            for (let dia of diasConDatos) html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
+            for (let dia of diasConDatos) html +=
+                `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
             html += `</div><div class="days-grid" style="height: ${alturaTotal}px;">`;
             for (let idx = 0; idx < diasConDatos.length; idx++) {
                 const dia = diasConDatos[idx];
@@ -971,7 +1056,8 @@
                 if (isCurrent && currentHour >= horaMin && currentHour <= horaMax) {
                     const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
                     const tiempoRest = calcularTiempoRestante();
-                    html += `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRest}"></div>`;
+                    html +=
+                        `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRest}"></div>`;
                 }
                 html += `</div>`;
             }
@@ -1023,16 +1109,17 @@
                 if (isNaN(val)) val = 10;
                 alarmMinutesBefore = Math.min(60, Math.max(1, val));
                 e.target.value = alarmMinutesBefore;
-                if (alarmEnabled) { alarmasDisparadas.clear(); verificarAlarmas(); }
+                if (alarmEnabled) { alarmasDisparadas.clear();
+                    verificarAlarmas(); }
                 actualizarUIAlarmas();
             });
         }
 
-        document.getElementById("excelInput").addEventListener("change", function (e) {
+        document.getElementById("excelInput").addEventListener("change", function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function (evt) {
+            reader.onload = function(evt) {
                 try {
                     const data = new Uint8Array(evt.target.result);
                     const wb = XLSX.read(data, { type: 'array' });
@@ -1056,7 +1143,8 @@
             if (window.matchMedia("(orientation: landscape)").matches) {
                 warning.classList.remove('show');
                 main.classList.add('visible');
-                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length) setTimeout(() => renderVisualizacion(), 30);
+                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length) setTimeout(() => renderVisualizacion(),
+                30);
             } else {
                 warning.classList.add('show');
                 main.classList.remove('visible');
@@ -1065,7 +1153,8 @@
         window.addEventListener('resize', checkOrientation);
         window.addEventListener('load', checkOrientation);
         document.addEventListener('visibilitychange', () => { if (!document.hidden && alarmEnabled) verificarAlarmas(); });
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW no registrado", e));
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW no registrado",
+            e));
     </script>
 </body>
 
