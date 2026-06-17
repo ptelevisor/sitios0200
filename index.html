@@ -91,12 +91,17 @@
             display: flex;
         }
 
+        /* ===== BARRA SUPERIOR: CARGA ===== */
         .upload-area {
             background: #ffffff;
             padding: 0.8rem;
             display: flex;
             justify-content: center;
             border-bottom: 1px solid #e5e7eb;
+        }
+
+        .upload-area.hidden {
+            display: none;
         }
 
         .file-label {
@@ -119,131 +124,11 @@
             transform: scale(1.02);
         }
 
-        .file-label.hidden {
-            display: none;
-        }
-
         input[type="file"] {
             display: none;
         }
 
-        .upload-area.hidden {
-            display: none;
-        }
-
-        .alarm-panel {
-            background: #ffffff;
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .alarm-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f3f4f6;
-            padding: 5px 12px;
-            border-radius: 30px;
-        }
-
-        .alarm-toggle label {
-            color: #1f2937;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
-        .alarm-toggle input {
-            width: 40px;
-            height: 20px;
-            appearance: none;
-            background: #d1d5db;
-            border-radius: 20px;
-            position: relative;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .alarm-toggle input:checked {
-            background: #ef4444;
-        }
-
-        .alarm-toggle input::before {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: 0.2s;
-        }
-
-        .alarm-toggle input:checked::before {
-            left: 22px;
-        }
-
-        .alarm-minutes {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f3f4f6;
-            padding: 5px 12px;
-            border-radius: 30px;
-        }
-
-        .alarm-minutes label {
-            color: #1f2937;
-            font-size: 0.8rem;
-        }
-
-        .alarm-minutes input {
-            background: #ffffff;
-            border: 1px solid #d1d5db;
-            color: #ef4444;
-            padding: 4px 8px;
-            border-radius: 20px;
-            width: 60px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .alarm-status-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .alarm-status {
-            font-size: 0.7rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .alarm-status.active {
-            background: #ef4444;
-            color: white;
-        }
-
-        .version-timestamp {
-            font-size: 0.6rem;
-            color: #9ca3af;
-            background: #f3f4f6;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-family: monospace;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
+        /* ===== VISUALIZACIÓN ===== */
         .timeline-view {
             flex: 1;
             display: flex;
@@ -382,39 +267,30 @@
         .period-block.intensity-1 {
             background: #fee2e2;
         }
-
         .period-block.intensity-2 {
             background: #fecaca;
         }
-
         .period-block.intensity-3 {
             background: #fca5a5;
         }
-
         .period-block.intensity-4 {
             background: #f87171;
         }
-
         .period-block.intensity-5 {
             background: #ef4444;
         }
-
         .period-block.intensity-6 {
             background: #dc2626;
         }
-
         .period-block.intensity-7 {
             background: #b91c1c;
         }
-
         .period-block.intensity-8 {
             background: #991b1b;
         }
-
         .period-block.intensity-9 {
             background: #7f1d1d;
         }
-
         .period-block.intensity-10 {
             background: #450a0a;
         }
@@ -503,11 +379,9 @@
             .orientation-warning {
                 display: none !important;
             }
-
             .main-content {
                 display: flex;
             }
-
             .main-content.visible {
                 display: flex;
             }
@@ -517,36 +391,22 @@
             .days-grid {
                 min-height: 300px;
             }
-
             .period-label {
                 font-size: 0.45rem;
             }
-
             .day-header-cell {
                 padding: 5px 2px;
                 font-size: 0.7rem;
             }
-
             .timeline-container {
                 margin-left: 55px;
             }
-
             .time-scale {
                 left: -55px;
                 width: 45px;
             }
-
             .time-marker {
                 font-size: 0.55rem;
-            }
-
-            .alarm-panel {
-                padding: 0.5rem 0.8rem;
-            }
-
-            .alarm-toggle label,
-            .alarm-minutes label {
-                font-size: 0.7rem;
             }
         }
     </style>
@@ -562,6 +422,8 @@
     </div>
 
     <div class="dashboard main-content" id="mainContent">
+
+        <!-- ===== BARRA SUPERIOR: CARGA ===== -->
         <div class="upload-area" id="uploadArea">
             <label class="file-label" id="uploadBtn">
                 📂 Subir archivo Excel
@@ -569,24 +431,9 @@
             </label>
         </div>
 
-        <div id="alarmPanel" class="alarm-panel" style="display: none;">
-            <div class="alarm-toggle">
-                <label>🔔 Alarma inteligente</label>
-                <input type="checkbox" id="alarmToggle">
-            </div>
-            <div class="alarm-minutes">
-                <label>⏰ Anticipación</label>
-                <input type="number" id="alarmMinutes" min="1" max="60" value="10">
-                <span style="color:#6b7280;">min</span>
-            </div>
-            <div class="alarm-status-container">
-                <span class="version-timestamp" id="versionTimestamp">v2.1 · 2026-06-17 16:00</span>
-                <span id="alarmStatus" class="alarm-status">⚪ Sin alarmas activas</span>
-            </div>
-        </div>
-
         <div id="errorContainer" style="display: none;"></div>
 
+        <!-- ===== VISUALIZACIÓN ===== -->
         <div id="visualizationRoot" class="timeline-view">
             <div class="no-data-msg">
                 🌑 Sube tu archivo con horarios<br>
@@ -594,22 +441,15 @@
                 🕒 Soporta formatos: "lunes", "15:30", "14.5", "1430" y más.
             </div>
         </div>
+
     </div>
 
     <script>
         // ============================================
-        // VERSIÓN DEL SISTEMA
+        // VERSIÓN
         // ============================================
         const VERSION = '2.1';
         const BUILD_DATE = '2026-06-17 16:00';
-
-        // Mostrar versión en la UI
-        document.addEventListener('DOMContentLoaded', function() {
-            const versionEl = document.getElementById('versionTimestamp');
-            if (versionEl) {
-                versionEl.textContent = `v${VERSION} · ${BUILD_DATE}`;
-            }
-        });
 
         let datosProcesados = {};
         let alarmInterval = null;
@@ -660,23 +500,17 @@
         function formatearHora(horaDecimal) {
             const hora = Math.floor(horaDecimal);
             const minutos = Math.round((horaDecimal - hora) * 60);
-            if (minutos === 60) {
-                return `${(hora + 1).toString().padStart(2, '0')}:00`;
-            }
+            if (minutos === 60) return `${(hora + 1).toString().padStart(2, '0')}:00`;
             return `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
         }
 
         // ============================================
-        // FUNCIÓN MODIFICADA: generarPeriodos()
-        // OPCIÓN 3: FUSIÓN DE BLOQUES SOLAPADOS + FILTRO
+        // generarPeriodos() con filtro de bloques
         // ============================================
         function generarPeriodos(horasUnicas) {
             if (horasUnicas.length === 0) return [];
-
-            // Ordenar horas
             horasUnicas.sort((a, b) => a - b);
 
-            // 1. Agrupar horas cercanas (separación <= 2 horas)
             let grupos = [];
             let grupoActual = [horasUnicas[0]];
             for (let i = 1; i < horasUnicas.length; i++) {
@@ -689,7 +523,6 @@
             }
             grupos.push([...grupoActual]);
 
-            // 2. Dividir grupos que son muy largos (> 4 horas)
             let gruposDivididos = [];
             for (let grupo of grupos) {
                 if (grupo.length === 0) continue;
@@ -711,12 +544,11 @@
                 }
             }
 
-            // 3. Fusionar bloques que se SOLAPAN
+            // Fusionar bloques solapados
             let periodosFinales = [];
             for (let periodo of gruposDivididos) {
                 const min = Math.min(...periodo);
                 const max = Math.max(...periodo);
-
                 if (periodosFinales.length > 0) {
                     const ultimo = periodosFinales[periodosFinales.length - 1];
                     if (min <= ultimo.max) {
@@ -727,7 +559,6 @@
                         continue;
                     }
                 }
-
                 periodosFinales.push({
                     min: min,
                     max: max,
@@ -737,14 +568,10 @@
                 });
             }
 
-            // 4. 🔥 NUEVO FILTRO: Eliminar bloques sospechosos
-            // - Bloques de menos de 10 minutos (0.166 horas)
-            // - Bloques que son un solo punto (min === max)
+            // Filtro: eliminar bloques de menos de 10 minutos
             periodosFinales = periodosFinales.filter(p => {
                 const duracion = p.max - p.min;
-                // Eliminar bloques de menos de 10 minutos
                 if (duracion < 0.166) return false;
-                // Eliminar bloques que son un solo punto
                 if (p.min === p.max) return false;
                 return true;
             });
@@ -763,56 +590,15 @@
             return now.getHours() + (now.getMinutes() / 60) + (now.getSeconds() / 3600);
         }
 
-        function calcularTiempoRestante() {
-            if (!datosProcesados.dias) return "00:00:00";
-
-            const ahora = new Date();
-            const diaActual = getCurrentDay();
-            const horaActualDecimal = getCurrentHourDecimal();
-            const dataDia = datosProcesados.dias[diaActual];
-
-            if (!dataDia || dataDia.periodos.length === 0) {
-                return calcularTiempoHastaManana(ahora, horaActualDecimal);
-            }
-
-            // 1. Buscar si estamos DENTRO de un bloque
-            for (let periodo of dataDia.periodos) {
-                if (horaActualDecimal >= periodo.min && horaActualDecimal <= periodo.max) {
-                    return calcularDiferencia(ahora, periodo.max);
-                }
-            }
-
-            // 2. Buscar el PRÓXIMO bloque del día
-            let proximoInicio = null;
-            for (let periodo of dataDia.periodos) {
-                if (periodo.min > horaActualDecimal) {
-                    if (proximoInicio === null || periodo.min < proximoInicio) {
-                        proximoInicio = periodo.min;
-                    }
-                }
-            }
-
-            if (proximoInicio !== null) {
-                return calcularDiferencia(ahora, proximoInicio);
-            }
-
-            // 3. No hay más bloques hoy, buscar mañana
-            return calcularTiempoHastaManana(ahora, horaActualDecimal);
-        }
-
         function calcularDiferencia(ahora, horaDestino) {
-            const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora
-                .getMilliseconds();
+            const ahoraEnMs = ahora.getHours() * 3600000 + ahora.getMinutes() * 60000 + ahora.getSeconds() * 1000 + ahora.getMilliseconds();
             const destinoEnMs = Math.floor(horaDestino) * 3600000 + (horaDestino % 1) * 60 * 60000;
             let diffMs = destinoEnMs - ahoraEnMs;
-
             if (diffMs < 0) diffMs = 0;
-
             const totalSegundos = Math.floor(diffMs / 1000);
             const horas = Math.floor(totalSegundos / 3600);
             const minutos = Math.floor((totalSegundos % 3600) / 60);
             const segundos = totalSegundos % 60;
-
             return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
         }
 
@@ -822,22 +608,42 @@
             const daysSpanish = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
             const diaManana = daysSpanish[tomorrow.getDay()];
             const dataManana = datosProcesados.dias[diaManana];
-
-            if (!dataManana || dataManana.periodos.length === 0) {
-                return "00:00:00";
-            }
-
+            if (!dataManana || dataManana.periodos.length === 0) return "00:00:00";
             let primerInicio = Math.min(...dataManana.periodos.map(p => p.min));
-
-            const horasHastaMedianoche = 24 - horaActual;
-            const horasTotales = horasHastaMedianoche + primerInicio;
-
+            const horasTotales = (24 - horaActual) + primerInicio;
             const totalSegundos = Math.floor(horasTotales * 3600);
             const horas = Math.floor(totalSegundos / 3600);
             const minutos = Math.floor((totalSegundos % 3600) / 60);
             const segundos = totalSegundos % 60;
-
             return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+        }
+
+        function calcularTiempoRestante() {
+            if (!datosProcesados.dias) return "00:00:00";
+            const ahora = new Date();
+            const diaActual = getCurrentDay();
+            const horaActualDecimal = getCurrentHourDecimal();
+            const dataDia = datosProcesados.dias[diaActual];
+            if (!dataDia || dataDia.periodos.length === 0) {
+                return calcularTiempoHastaManana(ahora, horaActualDecimal);
+            }
+            for (let periodo of dataDia.periodos) {
+                if (horaActualDecimal >= periodo.min && horaActualDecimal <= periodo.max) {
+                    return calcularDiferencia(ahora, periodo.max);
+                }
+            }
+            let proximoInicio = null;
+            for (let periodo of dataDia.periodos) {
+                if (periodo.min > horaActualDecimal) {
+                    if (proximoInicio === null || periodo.min < proximoInicio) {
+                        proximoInicio = periodo.min;
+                    }
+                }
+            }
+            if (proximoInicio !== null) {
+                return calcularDiferencia(ahora, proximoInicio);
+            }
+            return calcularTiempoHastaManana(ahora, horaActualDecimal);
         }
 
         function iniciarActualizacionTiempo() {
@@ -883,8 +689,7 @@
                     reproducirBeep();
                     alarmasDisparadas.add(alarmKey);
                     if (Notification.permission === 'granted') {
-                        new Notification(`⏰ ${periodo.label}`, { body: `Comienza en ${alarmMinutesBefore} minutos`,
-                            silent: true });
+                        new Notification(`⏰ ${periodo.label}`, { body: `Comienza en ${alarmMinutesBefore} minutos`, silent: true });
                     }
                     resaltarPeriodoEnVivo(diaActual, periodo.label);
                 }
@@ -926,6 +731,7 @@
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const filas = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
             if (!filas?.length) throw new Error("Archivo sin datos.");
+
             let colDia = -1,
                 colHora = -1;
             for (let r = 0; r < Math.min(10, filas.length); r++) {
@@ -934,11 +740,11 @@
                 for (let c = 0; c < row.length; c++) {
                     const val = row[c]?.toString().toLowerCase().trim() || "";
                     if ((val === "diasemana" || val === "dia semana" || val === "dia") && colDia === -1) colDia = c;
-                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && colHora === -1)
-                        colHora = c;
+                    if ((val === "horanotificacion" || val === "hora notificacion" || val === "hora") && colHora === -1) colHora = c;
                 }
                 if (colDia !== -1 && colHora !== -1) break;
             }
+
             if (colDia === -1 || colHora === -1) {
                 for (let r = 1; r < Math.min(30, filas.length); r++) {
                     const row = filas[r];
@@ -951,12 +757,15 @@
                     if (colDia !== -1 && colHora !== -1) break;
                 }
             }
+
             if (colDia === -1) throw new Error("❌ No se encontró columna de día (ej: diaSemana)");
             if (colHora === -1) throw new Error("❌ No se encontró columna de hora (ej: horaNotificacion)");
+
             let inicio = 0;
             for (let i = 0; i < filas.length; i++) {
                 if (filas[i]?.[colDia] && normalizarDia(filas[i][colDia])) { inicio = i; break; }
             }
+
             let total = 0;
             for (let i = inicio; i < filas.length; i++) {
                 const row = filas[i];
@@ -972,7 +781,9 @@
                 registrosPorDia[dia].push(horaDec);
                 total++;
             }
+
             if (total === 0) throw new Error("No se encontraron registros válidos.");
+
             let horaMinGlobal = 24,
                 horaMaxGlobal = 0;
             const resultado = { dias: {} };
@@ -1008,36 +819,41 @@
                 container.innerHTML = `<div class="no-data-msg">🔍 No hay datos cargados.</div>`;
                 return;
             }
+
             const diasConDatos = daysOrder.filter(d => datosProcesados.dias[d]?.total > 0);
             if (diasConDatos.length === 0) {
                 container.innerHTML = `<div class="no-data-msg">📭 No hay notificaciones en ningún día.</div>`;
                 return;
             }
+
             let maxFrecuencia = 0;
             for (let dia of diasConDatos) {
                 for (let p of datosProcesados.dias[dia].periodos) maxFrecuencia = Math.max(maxFrecuencia, p.count);
             }
+
             const horaMin = datosProcesados.horaMinGlobal,
                 horaMax = datosProcesados.horaMaxGlobal;
             const rangoHoras = horaMax - horaMin;
-            const alturaTotal = Math.min(window.innerHeight - 150, 620, document.documentElement.clientHeight - 150);
+            const alturaTotal = Math.min(window.innerHeight - 140, 620, document.documentElement.clientHeight - 140);
+
             const timeMarkers = [];
             for (let h = Math.ceil(horaMin); h <= Math.floor(horaMax); h += 2) {
                 const posY = ((h - horaMin) / rangoHoras) * alturaTotal;
                 timeMarkers.push({ hora: h, posY });
             }
+
             const currentDay = getCurrentDay();
             const currentHour = getCurrentHourDecimal();
+
             let html = `<div class="scroll-container"><div class="timeline-container" style="height: ${alturaTotal + 35}px;">
                         <div class="time-scale"><div class="time-markers" style="height: ${alturaTotal}px;">`;
             for (let m of timeMarkers) {
-                html +=
-                    `<div class="time-marker" style="top: ${m.posY}px;">${formatearHora(m.hora)}<div class="time-marker-line" style="top: 50%;"></div></div>`;
+                html += `<div class="time-marker" style="top: ${m.posY}px;">${formatearHora(m.hora)}<div class="time-marker-line" style="top: 50%;"></div></div>`;
             }
             html += `</div></div><div style="flex:1;"><div class="days-header">`;
-            for (let dia of diasConDatos) html +=
-                `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
+            for (let dia of diasConDatos) html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
             html += `</div><div class="days-grid" style="height: ${alturaTotal}px;">`;
+
             for (let idx = 0; idx < diasConDatos.length; idx++) {
                 const dia = diasConDatos[idx];
                 const data = datosProcesados.dias[dia];
@@ -1056,33 +872,18 @@
                 if (isCurrent && currentHour >= horaMin && currentHour <= horaMax) {
                     const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
                     const tiempoRest = calcularTiempoRestante();
-                    html +=
-                        `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRest}"></div>`;
+                    html += `<div class="current-time-line" style="top: ${currentPos}%;" data-tiempo="${tiempoRest}"></div>`;
                 }
                 html += `</div>`;
             }
+
             html += `</div></div></div></div>`;
             container.innerHTML = html;
-            actualizarUIAlarmas();
             iniciarActualizacionTiempo();
-        }
-
-        function actualizarUIAlarmas() {
-            const span = document.getElementById('alarmStatus');
-            if (!span) return;
-            if (alarmEnabled) {
-                span.textContent = `🔔 Alarmas activas (${alarmMinutesBefore} min antes)`;
-                span.classList.add('active');
-            } else {
-                span.textContent = '⚪ Alarmas desactivadas';
-                span.classList.remove('active');
-            }
         }
 
         function ocultarBotonUpload() {
             document.getElementById('uploadArea')?.classList.add('hidden');
-            const alarmPanel = document.getElementById('alarmPanel');
-            if (alarmPanel) alarmPanel.style.display = 'flex';
             if (Notification.permission === 'default') Notification.requestPermission();
         }
 
@@ -1095,29 +896,13 @@
             }
         }
 
-        function configurarAlarmasUI() {
-            const toggle = document.getElementById('alarmToggle');
-            const minutesInput = document.getElementById('alarmMinutes');
-            if (toggle) toggle.addEventListener('change', (e) => {
-                alarmEnabled = e.target.checked;
-                alarmEnabled ? iniciarSistemaAlarmas() : detenerSistemaAlarmas();
-                if (alarmEnabled) alarmasDisparadas.clear();
-                actualizarUIAlarmas();
-            });
-            if (minutesInput) minutesInput.addEventListener('change', (e) => {
-                let val = parseInt(e.target.value);
-                if (isNaN(val)) val = 10;
-                alarmMinutesBefore = Math.min(60, Math.max(1, val));
-                e.target.value = alarmMinutesBefore;
-                if (alarmEnabled) { alarmasDisparadas.clear();
-                    verificarAlarmas(); }
-                actualizarUIAlarmas();
-            });
-        }
-
+        // ============================================
+        // CARGA DEL ARCHIVO
+        // ============================================
         document.getElementById("excelInput").addEventListener("change", function(e) {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
@@ -1125,36 +910,46 @@
                     const wb = XLSX.read(data, { type: 'array' });
                     datosProcesados = procesarExcel(wb);
                     renderVisualizacion();
-                    configurarAlarmasUI();
                     ocultarBotonUpload();
                 } catch (err) {
                     mostrarError(err.message);
                     document.getElementById('uploadArea')?.classList.remove('hidden');
-                    document.getElementById('alarmPanel').style.display = 'none';
                 }
             };
             reader.onerror = () => mostrarError("Error al leer el archivo");
             reader.readAsArrayBuffer(file);
         });
 
+        // ============================================
+        // ORIENTACIÓN
+        // ============================================
         function checkOrientation() {
             const warning = document.getElementById('orientationWarning');
             const main = document.getElementById('mainContent');
             if (window.matchMedia("(orientation: landscape)").matches) {
                 warning.classList.remove('show');
                 main.classList.add('visible');
-                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length) setTimeout(() => renderVisualizacion(),
-                30);
+                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length) {
+                    setTimeout(() => renderVisualizacion(), 30);
+                }
             } else {
                 warning.classList.add('show');
                 main.classList.remove('visible');
             }
         }
+
         window.addEventListener('resize', checkOrientation);
         window.addEventListener('load', checkOrientation);
-        document.addEventListener('visibilitychange', () => { if (!document.hidden && alarmEnabled) verificarAlarmas(); });
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW no registrado",
-            e));
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && alarmEnabled) verificarAlarmas();
+        });
+
+        // ============================================
+        // SERVICE WORKER
+        // ============================================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW no registrado", e));
+        }
     </script>
 </body>
 
