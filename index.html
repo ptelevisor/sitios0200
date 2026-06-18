@@ -23,7 +23,7 @@
             background: #e5e7eb;
             margin: 0;
             padding: 0;
-            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -38,7 +38,7 @@
             box-shadow: none;
             overflow: hidden;
             border: none;
-            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
         }
@@ -84,7 +84,7 @@
             flex: 1;
             display: none;
             flex-direction: column;
-            min-height: 100vh;
+            min-height: 100dvh;
         }
 
         .main-content.visible {
@@ -98,10 +98,16 @@
             display: flex;
             justify-content: center;
             border-bottom: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
         }
 
         .upload-area.hidden {
             display: none;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            border: none;
         }
 
         .file-label {
@@ -133,7 +139,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 0.5rem 1rem 1rem 1rem;
+            padding: 0.5rem 1rem 0.5rem 1rem;
             min-height: 0;
         }
 
@@ -214,9 +220,8 @@
             display: flex;
             position: relative;
             background: #f9fafb;
-            height: calc(100vh - 140px);
-            min-height: 400px;
-            max-height: 800px;
+            min-height: 300px;
+            max-height: none;
         }
 
         .day-column {
@@ -234,22 +239,23 @@
             position: absolute;
             left: 3px;
             right: 3px;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .period-block:hover {
-            transform: scaleX(1.02);
+            transform: scale(1.03) translateY(-2px);
             filter: brightness(1.05);
             z-index: 10;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
         }
 
         .period-label {
@@ -389,7 +395,7 @@
 
         @media (orientation: landscape) and (max-height: 500px) {
             .days-grid {
-                min-height: 300px;
+                min-height: 250px;
             }
             .period-label {
                 font-size: 0.45rem;
@@ -407,6 +413,15 @@
             }
             .time-marker {
                 font-size: 0.55rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .timeline-view {
+                padding: 0.3rem 0.5rem 0.3rem 0.5rem;
+            }
+            .period-label {
+                font-size: 0.45rem;
             }
         }
     </style>
@@ -446,10 +461,10 @@
 
     <script>
         // ============================================
-        // VERSIÓN
+        // VERSIÓN MEJORADA - SIN ESPACIO EN BLANCO
         // ============================================
-        const VERSION = '2.1';
-        const BUILD_DATE = '2026-06-17 16:00';
+        const VERSION = '2.2';
+        const BUILD_DATE = '2026-06-17 17:30';
 
         let datosProcesados = {};
         let alarmInterval = null;
@@ -813,6 +828,9 @@
             return `intensity-${Math.min(10, Math.max(1, intensity))}`;
         }
 
+        // ============================================
+        // RENDER OPTIMIZADO - SIN ESPACIO EN BLANCO
+        // ============================================
         function renderVisualizacion() {
             const container = document.getElementById("visualizationRoot");
             if (!datosProcesados.dias || Object.keys(datosProcesados.dias).length === 0) {
@@ -831,10 +849,14 @@
                 for (let p of datosProcesados.dias[dia].periodos) maxFrecuencia = Math.max(maxFrecuencia, p.count);
             }
 
-            const horaMin = datosProcesados.horaMinGlobal,
-                horaMax = datosProcesados.horaMaxGlobal;
+            const horaMin = datosProcesados.horaMinGlobal;
+            const horaMax = datosProcesados.horaMaxGlobal;
             const rangoHoras = horaMax - horaMin;
-            const alturaTotal = Math.min(window.innerHeight - 140, 620, document.documentElement.clientHeight - 140);
+
+            // 🔥 CÁLCULO DE ALTURA DINÁMICA - SIN ESPACIO EN BLANCO
+            const headerOffset = 85; // Espacio para cabeceras y padding
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const alturaTotal = Math.max(350, Math.min(viewportHeight - headerOffset, 900));
 
             const timeMarkers = [];
             for (let h = Math.ceil(horaMin); h <= Math.floor(horaMax); h += 2) {
@@ -845,30 +867,48 @@
             const currentDay = getCurrentDay();
             const currentHour = getCurrentHourDecimal();
 
-            let html = `<div class="scroll-container"><div class="timeline-container" style="height: ${alturaTotal + 35}px;">
-                        <div class="time-scale"><div class="time-markers" style="height: ${alturaTotal}px;">`;
+            let html = `<div class="scroll-container">
+                        <div class="timeline-container" style="height: ${alturaTotal + 35}px;">
+                            <div class="time-scale">
+                                <div class="time-markers" style="height: ${alturaTotal}px;">`;
+
             for (let m of timeMarkers) {
-                html += `<div class="time-marker" style="top: ${m.posY}px;">${formatearHora(m.hora)}<div class="time-marker-line" style="top: 50%;"></div></div>`;
+                html += `<div class="time-marker" style="top: ${m.posY}px;">
+                            ${formatearHora(m.hora)}
+                            <div class="time-marker-line" style="top: 50%;"></div>
+                         </div>`;
             }
-            html += `</div></div><div style="flex:1;"><div class="days-header">`;
-            for (let dia of diasConDatos) html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
-            html += `</div><div class="days-grid" style="height: ${alturaTotal}px;">`;
+
+            html += `</div></div>
+                    <div style="flex:1;">
+                        <div class="days-header">`;
+
+            for (let dia of diasConDatos) {
+                html += `<div class="day-header-cell">${dia.charAt(0).toUpperCase() + dia.slice(1)}</div>`;
+            }
+
+            html += `</div>
+                    <div class="days-grid" style="height: ${alturaTotal}px;">`;
 
             for (let idx = 0; idx < diasConDatos.length; idx++) {
                 const dia = diasConDatos[idx];
                 const data = datosProcesados.dias[dia];
                 const isCurrent = (dia === currentDay);
                 html += `<div class="day-column" style="height: ${alturaTotal}px;">`;
+
                 for (let periodo of data.periodos) {
                     const topPercent = ((periodo.min - horaMin) / rangoHoras) * 100;
                     const bottomPercent = ((periodo.max - horaMin) / rangoHoras) * 100;
                     const heightPercent = bottomPercent - topPercent;
                     const intensity = getIntensityClass(periodo.count, maxFrecuencia);
                     const tooltip = `${periodo.label} · ${periodo.count} notif.`;
-                    html += `<div class="period-block ${intensity}" style="top: ${topPercent}%; height: ${heightPercent}%;" data-tooltip="${tooltip.replace(/"/g, '&quot;')}">
+                    html += `<div class="period-block ${intensity}" 
+                                 style="top: ${topPercent}%; height: ${heightPercent}%;" 
+                                 data-tooltip="${tooltip.replace(/"/g, '&quot;')}">
                                 <div class="period-label">${periodo.label}</div>
                              </div>`;
                 }
+
                 if (isCurrent && currentHour >= horaMin && currentHour <= horaMax) {
                     const currentPos = ((currentHour - horaMin) / rangoHoras) * 100;
                     const tiempoRest = calcularTiempoRestante();
@@ -883,7 +923,16 @@
         }
 
         function ocultarBotonUpload() {
-            document.getElementById('uploadArea')?.classList.add('hidden');
+            const uploadArea = document.getElementById('uploadArea');
+            if (uploadArea) {
+                uploadArea.classList.add('hidden');
+                uploadArea.style.display = 'none';
+                uploadArea.style.height = '0';
+                uploadArea.style.padding = '0';
+                uploadArea.style.margin = '0';
+                uploadArea.style.overflow = 'hidden';
+                uploadArea.style.border = 'none';
+            }
             if (Notification.permission === 'default') Notification.requestPermission();
         }
 
@@ -921,7 +970,7 @@
         });
 
         // ============================================
-        // ORIENTACIÓN
+        // ORIENTACIÓN MEJORADA
         // ============================================
         function checkOrientation() {
             const warning = document.getElementById('orientationWarning');
@@ -930,7 +979,7 @@
                 warning.classList.remove('show');
                 main.classList.add('visible');
                 if (datosProcesados.dias && Object.keys(datosProcesados.dias).length) {
-                    setTimeout(() => renderVisualizacion(), 30);
+                    setTimeout(() => renderVisualizacion(), 50);
                 }
             } else {
                 warning.classList.add('show');
@@ -938,7 +987,18 @@
             }
         }
 
-        window.addEventListener('resize', checkOrientation);
+        // Listener de resize con debounce para evitar renderizados excesivos
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                checkOrientation();
+                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0) {
+                    renderVisualizacion();
+                }
+            }, 200);
+        });
+
         window.addEventListener('load', checkOrientation);
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && alarmEnabled) verificarAlarmas();
@@ -950,6 +1010,18 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW no registrado", e));
         }
+
+        // ============================================
+        // RE-RENDER AL CAMBIAR TAMAÑO DE PANTALLA
+        // ============================================
+        // También re-renderiza cuando cambia la orientación
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                if (datosProcesados.dias && Object.keys(datosProcesados.dias).length > 0) {
+                    renderVisualizacion();
+                }
+            }, 300);
+        });
     </script>
 </body>
 
